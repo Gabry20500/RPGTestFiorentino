@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "RPGTestFiorentino",
+			"Path": "..\\Source\\RPGTestFiorentino.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "RPGTestFiorentinoEditor",
+			"Path": "..\\Source\\RPGTestFiorentinoEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

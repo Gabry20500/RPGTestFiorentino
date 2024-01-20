@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\unreal project\\rpgtestfiorentino\\rpgtestfiorentino\\intermediate\\build\\win64\\unrealeditor\\inc\\rpgtestfiorentino\\uht\\rpgtestfiorentino.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\unreal project\\rpgtestfiorentino\\rpgtestfiorentino\\intermediate\\build\\win64\\x64\\rpgtestfiorentinoeditor\\development\\unrealed\\sharedpch.unrealed.cpp20.h.pch",
+        "Includes": [
+            "c:\\unreal project\\rpgtestfiorentino\\rpgtestfiorentino\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\rpgtestfiorentino\\definitions.rpgtestfiorentino.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

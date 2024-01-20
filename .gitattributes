@@ -1,0 +1,28 @@
+# Set default behavior for all files
+* text=auto
+
+# Set binary attribute for specific files
+*.umap binary
+*.uasset binary
+*.uproject binary
+*.wav binary
+*.fbx binary
+*.blend binary
+*.obj binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.hdr binary
+*.exr binary
+*.mp3 binary
+*.mp4 binary
+*.mov binary
+*.psd binary
+*.mb binary
+*.tga binary
+*.cubemap binary
+*.tif binary
+*.bin.fbx binary
+*.upk binary
+*.udk binary
+*.duf binary

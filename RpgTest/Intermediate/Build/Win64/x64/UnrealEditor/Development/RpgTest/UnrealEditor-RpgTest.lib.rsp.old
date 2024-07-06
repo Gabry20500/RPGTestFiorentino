@@ -1,0 +1,15 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-RpgTest.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\RpgTestEditor\Development\Engine\SharedPCH.Engine.Cpp20.h.obj"
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\PlayerCharacter.gen.cpp.obj"
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\RpgTest.init.gen.cpp.obj"
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\RpgTest.cpp.obj"
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\PlayerCharacter.cpp.obj"
+"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\Default.rc2.res"
+/OUT:"C:\Unreal Project\RPGTestFiorentino\RpgTest\Intermediate\Build\Win64\x64\UnrealEditor\Development\RpgTest\UnrealEditor-RpgTest.lib"

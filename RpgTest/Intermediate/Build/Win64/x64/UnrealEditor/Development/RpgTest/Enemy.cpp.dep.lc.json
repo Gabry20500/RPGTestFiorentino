@@ -1,0 +1,15 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\unreal project\\rpgtestfiorentino\\rpgtest\\source\\rpgtest\\private\\enemies\\enemy.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\unreal project\\rpgtestfiorentino\\rpgtest\\intermediate\\build\\win64\\x64\\rpgtesteditor\\development\\engine\\sharedpch.engine.cpp20.h.pch",
+        "Includes": [
+            "c:\\unreal project\\rpgtestfiorentino\\rpgtest\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\rpgtest\\definitions.rpgtest.h",
+            "c:\\unreal project\\rpgtestfiorentino\\rpgtest\\source\\rpgtest\\public\\enemies\\enemy.h",
+            "c:\\unreal project\\rpgtestfiorentino\\rpgtest\\intermediate\\build\\win64\\unrealeditor\\inc\\rpgtest\\uht\\enemy.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

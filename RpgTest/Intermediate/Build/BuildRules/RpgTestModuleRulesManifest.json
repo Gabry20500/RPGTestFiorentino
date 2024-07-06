@@ -1,0 +1,8 @@
+{
+	"SourceFiles": [
+		"C:\\Unreal Project\\RPGTestFiorentino\\RpgTest\\Source\\RpgTest\\RpgTest.Build.cs",
+		"C:\\Unreal Project\\RPGTestFiorentino\\RpgTest\\Source\\RpgTest.Target.cs",
+		"C:\\Unreal Project\\RPGTestFiorentino\\RpgTest\\Source\\RpgTestEditor.Target.cs"
+	],
+	"EngineVersion": "5.3.2"
+}

@@ -118,16 +118,6 @@ void APlayerZDChar::Attack()
             CollisionParams
         );
 
-        // Ottieni l'istanza di animazione attuale
-        UPaperZDAnimInstance* MyAnimInstance = AnimationComponent->GetAnimInstance();
-        if (!MyAnimInstance)  UE_LOG(LogTemp, Warning, TEXT("No AnimInstance"));
-
-        // Specifica il nome del nodo a cui vuoi saltare
-        FName NodeName = "J_Attack";
-
-        // Usa il metodo JumpToNode per saltare al nodo specificato
-        MyAnimInstance->JumpToNode(NodeName);
-
         if (bHit)
         {
             AActor* HitActor = HitResult.GetActor();
@@ -141,6 +131,4 @@ void APlayerZDChar::Attack()
         // Debug line to visualize the trace
         DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
     }
-
-    isAttacking = false;
 }

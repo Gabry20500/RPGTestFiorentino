@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PaperCharacter.h"
-#include "PlayerChar.generated.h"
+#include "PaperZDCharacter.h"
+#include "PlayerZDChar.generated.h"
 
 
 UENUM(BlueprintType)
 enum class FPlayerDirection : uint8
 {
-	None,
 	Up,
 	Down,
 	Left,
@@ -18,16 +17,13 @@ enum class FPlayerDirection : uint8
 };
 
 
-/**
- * 
- */
 UCLASS()
-class RPGTEST_API APlayerChar : public APaperCharacter
+class RPGTEST_API APlayerZDChar : public APaperZDCharacter
 {
 	GENERATED_BODY()
-
+	
 public:
-	APlayerChar();
+	APlayerZDChar();
 
 protected:
 
@@ -37,17 +33,18 @@ protected:
 
 	void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent);
 
+	FRotator GetRotation();
 	void MoveForeward(float AxisValue);
 	void MoveRight(float AxisValue);
 
 	void Attack();
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerMovement")
-	bool inMovement;
+	bool isAttacking;
 
-	UStaticMeshComponent* Body;
+	UPaperZDAnimationComponent* AnimationComponent;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerMovement")
 	FPlayerDirection PlyRotation;
-	
+
 };

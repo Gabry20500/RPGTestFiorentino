@@ -39,6 +39,11 @@ protected:
 
 	void Attack();
 
+
+	int Damage;
+	int Health;
+	int Shield;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerMovement")
 	bool isAttacking;
 

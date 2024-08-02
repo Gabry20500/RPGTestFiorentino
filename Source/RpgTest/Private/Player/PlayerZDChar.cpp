@@ -4,10 +4,15 @@
 #include "Player/PlayerZDChar.h"
 #include "PaperZDAnimationComponent.h"
 #include "PaperZDAnimInstance.h"
+#include <Enemy/Enemy.h>
 
 APlayerZDChar::APlayerZDChar()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+    Damage = 35;
+    Health = 100;
+    Shield = 0;
 }
 
 void APlayerZDChar::BeginPlay()
@@ -22,9 +27,6 @@ void APlayerZDChar::BeginPlay()
 void APlayerZDChar::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// Log l'enum usando UE_LOG
-	UE_LOG(LogTemp, Log, TEXT("Enum value: %s"), *UEnum::GetValueAsString(PlyRotation));
 }
 
 void APlayerZDChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -120,11 +122,9 @@ void APlayerZDChar::Attack()
 
         if (bHit)
         {
-            AActor* HitActor = HitResult.GetActor();
-            if (HitActor)
+            if (AEnemy* Enemy = Cast<AEnemy>(HitResult.GetActor()))
             {
-                // Distruggi l'attore
-                HitActor->Destroy();
+                Enemy->ApplyDamage(Damage);
             }        
         }
 

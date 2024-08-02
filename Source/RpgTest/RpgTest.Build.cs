@@ -7,10 +7,10 @@ public class RpgTest : ModuleRules
 	public RpgTest(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PaperZD", "AIModule" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "Paper2D" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PaperZD", "AIModule" });
+
+        PrivateDependencyModuleNames.AddRange(new string[] { "Paper2D", "AIModule", "InputCore" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

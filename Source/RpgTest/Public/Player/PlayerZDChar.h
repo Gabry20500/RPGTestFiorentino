@@ -25,6 +25,8 @@ class RPGTEST_API APlayerZDChar : public APaperZDCharacter
 public:
 	APlayerZDChar();
 
+	void ApplyDamage(int DamageAmount);
+
 protected:
 
 	void BeginPlay();

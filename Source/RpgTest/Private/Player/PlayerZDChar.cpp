@@ -5,6 +5,7 @@
 #include "PaperZDAnimationComponent.h"
 #include "PaperZDAnimInstance.h"
 #include <Enemy/Enemy.h>
+#include <Kismet/KismetSystemLibrary.h>
 
 APlayerZDChar::APlayerZDChar()
 {
@@ -131,4 +132,21 @@ void APlayerZDChar::Attack()
         // Debug line to visualize the trace
         DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
     }
+}
+
+void APlayerZDChar::ApplyDamage(int DamageAmount)
+{
+    Health -= DamageAmount;
+
+    // Check if health has dropped to zero or below
+    if (Health <= 0)
+    {
+        Health = 0;
+        APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+
+        // Call the QuitGame function
+        UKismetSystemLibrary::QuitGame(GetWorld(), PlayerController, EQuitPreference::Quit, false);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("%d"), Health);
 }

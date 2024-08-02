@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
+#include "Player/PlayerZDChar.h"
 #include "Enemy.generated.h"
 
 UCLASS()
-class RPGTEST_API AEnemy : public APawn
+class RPGTEST_API AEnemy : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -27,16 +28,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	void ApplyDamage(int DamageAmount);
 
-	UFUNCTION()
-	void OnPlayerDetected(APawn* DetectedPawn);
-
 protected:
     void MoveToPlayer();
 
     void CheckAttackRange();
 
+    void StartAttackCooldown();
+
+    void ResetAttack();
+
     virtual void PerformMeleeAttack();
     virtual void PerformRangedAttack();
+
+    void ApplyDamageWithDelay();
 
     // Componenti e variabili
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
@@ -45,15 +49,27 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     float AttackRange;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+    float AttackCooldown;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+    bool bCanAttack;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
     bool bIsChasingPlayer;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-    APawn* TargetPlayer;
+    APlayerZDChar* TargetPlayer;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     bool bIsRanged;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EnemyHealth")
-    int Health = 0;
+    int Health;
+    
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EnemyHealth")
+    int Damage;
+
+    FTimerHandle AttackCooldownTimerHandle;
+    FTimerHandle DamageDelayTimerHandle;
 };

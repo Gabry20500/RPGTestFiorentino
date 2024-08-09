@@ -7,7 +7,7 @@ AGhostEnemy::AGhostEnemy()
 {
     Health = 60;
     Damage = 10;
-    AttackRange = 600.0f;
+    AttackRange = 2000.0f;
     AttackCooldown = 2.5f;
     bIsRanged = true;
 }
@@ -15,6 +15,18 @@ AGhostEnemy::AGhostEnemy()
 void AGhostEnemy::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void AGhostEnemy::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (bIsChasingPlayer)
+    {
+        MoveToPlayer();
+        CheckAttackRange();
+        DetermineDirection();
+    }
 }
 
 void AGhostEnemy::PerformRangedAttack()
@@ -30,6 +42,8 @@ void AGhostEnemy::PerformRangedAttack()
             AProjectile* Projectile = World->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
             if (Projectile)
             {
+                Projectile->SetDamage(Damage);
+
                 FVector LaunchDirection = MuzzleRotation.Vector();
                 Projectile->SetVelocity(LaunchDirection);
             }

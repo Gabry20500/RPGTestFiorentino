@@ -7,7 +7,7 @@ ASlimeEnemy::ASlimeEnemy()
 {
     Health = 80;
     Damage = 15;
-    AttackRange = 75.0f;
+    AttackRange = 100.0f;
     AttackCooldown = 2.0f;
     bIsRanged = false;
 }

@@ -6,6 +6,9 @@
 #include "PaperZDAnimInstance.h"
 #include <Enemy/Enemy.h>
 #include <Kismet/KismetSystemLibrary.h>
+#include <Interactable/HealthFountain.h>
+#include <Interactable/Chest.h>
+#include <Interactable/Mimic.h>
 
 APlayerZDChar::APlayerZDChar()
 {
@@ -14,6 +17,10 @@ APlayerZDChar::APlayerZDChar()
     Damage = 35;
     Health = 100;
     Shield = 0;
+
+    bCanInteract = false;
+    InteractableActor = nullptr;
+
 }
 
 void APlayerZDChar::BeginPlay()
@@ -37,6 +44,7 @@ void APlayerZDChar::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	InputComponent->BindAxis("MoveRight", this, &APlayerZDChar::MoveRight);
 	InputComponent->BindAxis("MoveForeward", this, &APlayerZDChar::MoveForeward);
 	InputComponent->BindAction("Attack", IE_Pressed, this, &APlayerZDChar::Attack);
+    InputComponent->BindAction("Interact", IE_Pressed, this, &APlayerZDChar::Interact);
 }
 
 FRotator APlayerZDChar::GetRotation()
@@ -149,4 +157,61 @@ void APlayerZDChar::ApplyDamage(int DamageAmount)
     }
 
     UE_LOG(LogTemp, Log, TEXT("%d"), Health);
+}
+
+void APlayerZDChar::Interact()
+{
+    if (bCanInteract && InteractableActor)
+    {
+        if (AHealthFountain* Fountain = Cast<AHealthFountain>(InteractableActor))
+        {
+            Fountain->HealPlayer(this);
+            Fountain->ChangeFlipbook();
+        }
+        else if (AChest* Chest = Cast<AChest>(InteractableActor))
+        {
+            Chest->ChangeFlipbook();
+            Chest->GiveItemToPlayer(this);
+        }
+        else if (AMimic* Mimic = Cast<AMimic>(InteractableActor))
+        {
+            Mimic->TransformToEnemy();
+        }
+    }
+}
+
+void APlayerZDChar::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+    Super::NotifyActorBeginOverlap(OtherActor);
+
+    if (OtherActor && (OtherActor->IsA(AHealthFountain::StaticClass()) ||
+        OtherActor->IsA(AChest::StaticClass()) ||
+        OtherActor->IsA(AMimic::StaticClass())))
+    {
+        bCanInteract = true;
+        InteractableActor = OtherActor;
+        UE_LOG(LogTemp, Log, TEXT("Interazione possibile con: %s"), *OtherActor->GetName());
+    }
+}
+
+void APlayerZDChar::NotifyActorEndOverlap(AActor* OtherActor)
+{
+    Super::NotifyActorEndOverlap(OtherActor);
+
+    if (OtherActor && OtherActor == InteractableActor)
+    {
+        bCanInteract = false;
+        InteractableActor = nullptr;
+        UE_LOG(LogTemp, Log, TEXT("Interazione terminata con: %s"), *OtherActor->GetName());
+    }
+}
+
+void APlayerZDChar::ReciveItem(AItem* Item)
+{
+    if (Item)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Ricevuto oggetto: %s"), *Item->GetItemName());
+
+        Item->Destroy();
+    }
 }

@@ -32,6 +32,8 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    virtual void Tick(float DeltaTime) override;
+
     // Override dell'attacco ranged
     virtual void PerformRangedAttack() override;
 

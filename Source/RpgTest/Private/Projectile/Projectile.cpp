@@ -2,29 +2,35 @@
 
 
 #include "Projectile/Projectile.h"
+#include "Components/SphereComponent.h"
+#include <Player/PlayerZDChar.h>
 
 // Sets default values
 AProjectile::AProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-    ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
-    RootComponent = ProjectileMesh;
+    PrimaryActorTick.bCanEverTick = true;
 
     ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
     ProjectileMovement->InitialSpeed = 1000.0f;
     ProjectileMovement->MaxSpeed = 1000.0f;
 
-    // Imposta la collisione del proiettile
-    ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+}
+
+void AProjectile::SetDamage(float InDamage)
+{
+    Damage = InDamage;
 }
 
 // Called when the game starts or when spawned
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    USphereComponent* SphereComponent = FindComponentByClass<USphereComponent>();
+    if (SphereComponent)
+    {
+        SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlapBegin);
+    }
 }
 
 // Called every frame
@@ -34,11 +40,24 @@ void AProjectile::Tick(float DeltaTime)
 
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    UE_LOG(LogTemp, Warning, TEXT("%s"), *OverlappedComp->GetName());
     if (OtherActor && OtherActor != this && OtherActor != GetOwner())
     {
-        
+        // Controlla se l'attore colpito ha il tag "Player"
+        if (OtherActor->ActorHasTag(FName("Player")))
+        {
+            // Cast dell'attore a APlayerZDChar
+            APlayerZDChar* Player = Cast<APlayerZDChar>(OtherActor);
+            if (Player)
+            {
+                // Applica il danno al giocatore
+                Player->ApplyDamage(Damage);
+            }
+        }
+
+        // Distruggi il proiettile dopo l'impatto
         Destroy();
     }
 }

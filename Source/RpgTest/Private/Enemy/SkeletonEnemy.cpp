@@ -7,7 +7,7 @@ ASkeletonEnemy::ASkeletonEnemy()
 {
     Health = 80;
     Damage = 15;
-    AttackRange = 500.0f;
+    AttackRange = 900.0f;
     AttackCooldown = 3.0f;
     bIsRanged = true;
 }
@@ -15,6 +15,18 @@ ASkeletonEnemy::ASkeletonEnemy()
 void ASkeletonEnemy::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void ASkeletonEnemy::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (bIsChasingPlayer)
+    {
+        MoveToPlayer();
+        CheckAttackRange();
+        DetermineDirection();
+    }
 }
 
 void ASkeletonEnemy::PerformRangedAttack()
@@ -30,6 +42,8 @@ void ASkeletonEnemy::PerformRangedAttack()
             AProjectile* Projectile = World->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
             if (Projectile)
             {
+                Projectile->SetDamage(Damage);
+
                 FVector LaunchDirection = MuzzleRotation.Vector();
                 Projectile->SetVelocity(LaunchDirection);
             }

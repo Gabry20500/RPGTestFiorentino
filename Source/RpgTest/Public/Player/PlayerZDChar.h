@@ -27,6 +27,14 @@ public:
 
 	void ApplyDamage(int DamageAmount);
 
+	void Interact();
+
+	void NotifyActorBeginOverlap(AActor* OtherActor);
+
+	void NotifyActorEndOverlap(AActor* OtherActor);
+
+	void ReciveItem(class AItem* Item);
+
 protected:
 
 	void BeginPlay();
@@ -53,5 +61,10 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerMovement")
 	FPlayerDirection PlyRotation;
+private:
+	
+	bool bCanInteract;
+
+	AActor* InteractableActor;
 
 };

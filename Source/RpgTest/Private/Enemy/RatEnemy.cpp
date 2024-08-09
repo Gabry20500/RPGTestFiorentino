@@ -9,7 +9,7 @@ ARatEnemy::ARatEnemy()
 {
     Health = 50;
     Damage = 10;
-    AttackRange = 50.0f;
+    AttackRange = 100.0f;
     AttackCooldown = 1.5f;
     bIsRanged = false;
 }

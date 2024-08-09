@@ -31,6 +31,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
 	virtual void PerformRangedAttack() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skeleton", meta = (AllowPrivateAccess = "true"))

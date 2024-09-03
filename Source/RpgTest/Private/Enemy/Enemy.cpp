@@ -27,6 +27,11 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
+    if (!GetController())
+    {
+        SpawnDefaultController();
+    }
+
     APlayerZDChar* PlayerCharacter = Cast<APlayerZDChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
     if (PlayerCharacter)
     {

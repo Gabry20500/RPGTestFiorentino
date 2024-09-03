@@ -35,6 +35,9 @@ public:
 
 	void ReciveItem(class AItem* Item);
 
+	// Declare the function to get the current room
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	ARoom* GetCurrentRoom() const;
 protected:
 
 	void BeginPlay();
@@ -49,6 +52,7 @@ protected:
 
 	void Attack();
 
+	void MovePlayer(FVector Direction);
 
 	int Damage;
 	int Health;
@@ -66,5 +70,7 @@ private:
 	bool bCanInteract;
 
 	AActor* InteractableActor;
+
+
 
 };

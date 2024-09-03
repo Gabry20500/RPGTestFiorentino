@@ -9,6 +9,10 @@
 #include <Interactable/HealthFountain.h>
 #include <Interactable/Chest.h>
 #include <Interactable/Mimic.h>
+#include <RoomGeneration/Door.h>
+#include <RoomGeneration/Room.h>
+#include <RoomGeneration/LevelManager.h>
+#include <Kismet/GameplayStatics.h>
 
 APlayerZDChar::APlayerZDChar()
 {
@@ -142,6 +146,14 @@ void APlayerZDChar::Attack()
     }
 }
 
+void APlayerZDChar::MovePlayer(FVector Direction)
+{
+    FVector NewLocation = GetActorLocation() + Direction;
+    SetActorLocation(NewLocation);
+
+    UE_LOG(LogTemp, Warning, TEXT("Player moved to: %s"), *NewLocation.ToString());
+}
+
 void APlayerZDChar::ApplyDamage(int DamageAmount)
 {
     Health -= DamageAmount;
@@ -177,6 +189,53 @@ void APlayerZDChar::Interact()
         {
             Mimic->TransformToEnemy();
         }
+        else if (ADoor* Door = Cast<ADoor>(InteractableActor))
+        {
+            ARoom* CurrentRoom = GetCurrentRoom(); // Funzione che restituisce la stanza attuale del giocatore
+            ARoom* NextRoom = Door->GetLinkedRoom(); // Stanza collegata dalla porta
+
+            if (CurrentRoom && NextRoom)
+            {
+                // Determina la direzione in base alla porta
+                FVector Direction;
+                if (Door == CurrentRoom->NorthDoor)
+                {
+                    Direction = FVector(1500.0f, 0, 0); // Spostamento verso nord
+                }
+                else if (Door == CurrentRoom->SouthDoor)
+                {
+                    Direction = FVector(-1500.0f, 0, 0); // Spostamento verso sud
+                }
+                else if (Door == CurrentRoom->EastDoor)
+                {
+                    Direction = FVector(0, 1500.0f, 0); // Spostamento verso est
+                }
+                else if (Door == CurrentRoom->WestDoor)
+                {
+                    Direction = FVector(0, -1500.0f, 0); // Spostamento verso ovest
+                }
+
+                // Sposta il giocatore
+                MovePlayer(Direction);
+
+                // Trova il LevelManager e aggiorna la stanza
+                TArray<AActor*> FoundActors;
+                UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("LM"), FoundActors);
+
+                for (AActor* Actor : FoundActors)
+                {
+                    ALevelManager* LevelManager = Cast<ALevelManager>(Actor);
+                    if (LevelManager)
+                    {
+                        //// Disattiva la stanza corrente
+                        //LevelManager->DeactivateAllRooms();
+
+                        //// Attiva la nuova stanza
+                        //LevelManager->ActivateRoomAt(NextRoom->GetRoomX(), NextRoom->GetRoomY());
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -186,11 +245,12 @@ void APlayerZDChar::NotifyActorBeginOverlap(AActor* OtherActor)
 
     if (OtherActor && (OtherActor->IsA(AHealthFountain::StaticClass()) ||
         OtherActor->IsA(AChest::StaticClass()) ||
-        OtherActor->IsA(AMimic::StaticClass())))
+        OtherActor->IsA(AMimic::StaticClass())) || 
+        OtherActor->IsA(ADoor::StaticClass()))
     {
         bCanInteract = true;
         InteractableActor = OtherActor;
-        UE_LOG(LogTemp, Log, TEXT("Interazione possibile con: %s"), *OtherActor->GetName());
+        UE_LOG(LogTemp, Warning, TEXT("Interazione possibile con: %s"), *OtherActor->GetName());
     }
 }
 
@@ -214,4 +274,31 @@ void APlayerZDChar::ReciveItem(AItem* Item)
 
         Item->Destroy();
     }
+}
+
+ARoom* APlayerZDChar::GetCurrentRoom() const
+{
+    // Retrieve the player's current location
+    FVector PlayerLocation = GetActorLocation();
+
+    // Calculate room coordinates from the player's location
+    int32 PlayerX = FMath::RoundToInt(PlayerLocation.X / 1500.0f);
+    int32 PlayerY = FMath::RoundToInt(PlayerLocation.Y / 1500.0f);
+
+    // Find the LevelManager instance in the world
+    TArray<AActor*> FoundActors;
+    UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("LM"), FoundActors);
+
+    for (AActor* Actor : FoundActors)
+    {
+        ALevelManager* LevelManager = Cast<ALevelManager>(Actor);
+        if (LevelManager)
+        {
+            // Return the room at the computed coordinates
+            return LevelManager->GetRoomAt(PlayerX, PlayerY);
+        }
+    }
+
+    // Return nullptr if no room is found
+    return nullptr;
 }

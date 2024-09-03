@@ -21,23 +21,26 @@ ALevelManager::ALevelManager()
 // Called when the game starts or when spawned
 void ALevelManager::BeginPlay()
 {
-	Super::BeginPlay();
-    InitializeLevelGrid();
-    LoadRoom(PlayerX, PlayerY);
-    PreloadNearbyRooms(PlayerX, PlayerY);
+    Super::BeginPlay();
+    InitializeLevelGrid();   // Clear any previous level data
+
+    for (int32 X = 0; X < GridWidth; ++X)
+    {
+        for (int32 Y = 0; Y < GridHeight; ++Y)
+        {
+            SpawnRoom(X, Y);
+        }
+    }
+
+    InitializeDoors();
+
+   // DeactivateAllRooms();
+    //ActivateRoomAt(PlayerX, PlayerY);;
 }
 
 void ALevelManager::InitializeLevelGrid()
 {
-    LevelGrid.SetNum(GridWidth);
-    for (auto& Row : LevelGrid)
-    {
-        Row.SetNum(GridHeight);
-        for (auto& Cell : Row)
-        {
-            Cell = nullptr; 
-        }
-    }
+    LevelGrid.Empty(); // Ensure LevelGrid is clean 
 }
 
 void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
@@ -45,109 +48,77 @@ void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
     int32 NewX = PlayerX + DeltaX;
     int32 NewY = PlayerY + DeltaY;
 
-    if (LevelGrid.IsValidIndex(NewX) && LevelGrid[NewX].IsValidIndex(NewY))
+    if (NewX >= 0 && NewX < GridWidth && NewY >= 0 && NewY < GridHeight)
     {
         PlayerX = NewX;
         PlayerY = NewY;
-        LoadRoom(PlayerX, PlayerY);
-        PreloadNearbyRooms(PlayerX, PlayerY);
+
+        //DeactivateAllRooms();
+
+        //ActivateRoomAt(PlayerX, PlayerY);
     }
 }
 
-void ALevelManager::LoadRoom(int32 X, int32 Y)
+void ALevelManager::InitializeDoors()
 {
-    if (!LevelGrid.IsValidIndex(X) || !LevelGrid[X].IsValidIndex(Y))
-        return;
-
-    if (LevelGrid[X][Y] == nullptr) // Se la stanza non è già stata spawnata
+    for (auto& RoomEntry : LevelGrid)
     {
-        if (RoomBlueprint == nullptr)
+        ARoom* CurrentRoom = RoomEntry.Value;
+        if (CurrentRoom)
         {
-            UE_LOG(LogTemp, Error, TEXT("RoomBlueprint is not assigned!"));
-            return;
-        }
+            // Get adjacent rooms for this room
+            ARoom* NorthRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY + 1);
+            ARoom* SouthRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY - 1);
+            ARoom* EastRoom = GetRoomAt(CurrentRoom->RoomX + 1, CurrentRoom->RoomY);
+            ARoom* WestRoom = GetRoomAt(CurrentRoom->RoomX - 1, CurrentRoom->RoomY);
 
-        ERoomType RoomType = ERoomType::EnemyRoom; // Imposta un tipo di stanza predefinito
-        SpawnRoom(X, Y, RoomType);
-    }
-}
-
-void ALevelManager::PreloadNearbyRooms(int32 CenterX, int32 CenterY)
-{
-    const int32 Radius = 1; // Raggio di stanze da precaricare
-    for (int32 X = CenterX - Radius; X <= CenterX + Radius; ++X)
-    {
-        for (int32 Y = CenterY - Radius; Y <= CenterY + Radius; ++Y)
-        {
-            if (LevelGrid.IsValidIndex(X) && LevelGrid[X].IsValidIndex(Y) && LevelGrid[X][Y] == nullptr)
-            {
-                ERoomType RoomType = ERoomType::EnemyRoom; // Imposta un tipo di stanza predefinito
-                SpawnRoom(X, Y, RoomType);
-            }
+            // Now link the doors
+            CurrentRoom->LinkDoors(NorthRoom, SouthRoom, EastRoom, WestRoom);
         }
     }
 }
 
-
-void ALevelManager::SpawnRoom(int32 RoomX, int32 RoomY, ERoomType RoomType)
+void ALevelManager::SpawnRoom(int32 RoomX, int32 RoomY)
 {
+ 
+    int32 RandomValue = FMath::RandRange(0, 4);
+    ERoomType RoomType;
+
+    switch (RandomValue)
+    {
+    case 0:
+        RoomType = ERoomType::Empty;
+        break;
+    case 1:
+        RoomType = ERoomType::HealingFountain;
+        break;
+    case 2:
+        RoomType = ERoomType::Chest;
+        break;
+    case 3:
+        RoomType = ERoomType::Mimic;
+        break;
+    case 4:
+        RoomType = ERoomType::Enemy;
+        break;
+    default:
+        RoomType = ERoomType::Empty;
+        break;
+    }
+
     if (RoomBlueprint)
     {
-        FVector SpawnLocation = FVector(RoomX * 1500.0f, RoomY * 1500.0f, 0.0f); // Calcola la posizione
+        FVector SpawnLocation = FVector(RoomX * 1500.0f, RoomY * 1500.0f, 0.0f); // Calculate position
         ARoom* SpawnedRoom = GetWorld()->SpawnActor<ARoom>(RoomBlueprint, SpawnLocation, FRotator::ZeroRotator);
 
         if (SpawnedRoom)
         {
+            SpawnedRoom->RoomX = RoomX;
+            SpawnedRoom->RoomY = RoomY;
             SpawnedRoom->RoomType = RoomType;
-            SpawnedRoom->SetRoomContent(0); // Configura il contenuto della stanza (ID o logica)
+            SpawnedRoom->SetRoomContent(0); // Set room content (ID or logic)
 
-            switch (RoomType)
-            {
-            case ERoomType::HealingFountain:
-                if (GetWorld())
-                {
-                    GetWorld()->SpawnActor<AHealthFountain>(AHealthFountain::StaticClass(), SpawnLocation, FRotator::ZeroRotator);
-                }
-                break;
-
-            case ERoomType::Chest:
-                if (GetWorld())
-                {
-                    GetWorld()->SpawnActor<AChest>(AChest::StaticClass(), SpawnLocation, FRotator::ZeroRotator);
-                }
-                break;
-
-            case ERoomType::Mimic:
-                if (GetWorld())
-                {
-                    GetWorld()->SpawnActor<AMimic>(AMimic::StaticClass(), SpawnLocation, FRotator::ZeroRotator);
-                }
-                break;
-
-            case ERoomType::EnemyRoom:
-            {
-                if (GetWorld())
-                {
-                    TArray<TSubclassOf<AEnemy>> Enemies;
-                    Enemies.Add(AGhostEnemy::StaticClass());
-                    Enemies.Add(ARatEnemy::StaticClass());
-                    Enemies.Add(ASlimeEnemy::StaticClass());
-
-                    if (Enemies.Num() > 0)
-                    {
-                        int32 RandomIndex = FMath::RandRange(0, Enemies.Num() - 1);
-                        TSubclassOf<AEnemy> SelectedEnemy = Enemies[RandomIndex];
-                        GetWorld()->SpawnActor<AEnemy>(SelectedEnemy, SpawnLocation, FRotator::ZeroRotator);
-                    }
-                }
-            }
-            break;
-
-            default:
-                break;
-            }
-
-            LevelGrid[RoomX][RoomY] = SpawnedRoom;
+            LevelGrid.Add(FIntPoint(RoomX, RoomY), SpawnedRoom);
         }
     }
     else
@@ -156,11 +127,51 @@ void ALevelManager::SpawnRoom(int32 RoomX, int32 RoomY, ERoomType RoomType)
     }
 }
 
-void ALevelManager::DestroyRoom(int32 RoomX, int32 RoomY)
+void ALevelManager::SpawnAllRooms()
 {
-    if (LevelGrid.IsValidIndex(RoomX) && LevelGrid[RoomX].IsValidIndex(RoomY) && LevelGrid[RoomX][RoomY])
+    // Loop through all positions in the grid and spawn a room at each position
+    for (int32 X = 0; X < GridWidth; ++X)
     {
-        LevelGrid[RoomX][RoomY]->Destroy();
-        LevelGrid[RoomX][RoomY] = nullptr;
+        for (int32 Y = 0; Y < GridHeight; ++Y)
+        {
+            ERoomType RoomType = ERoomType::Enemy; // Default room type
+            SpawnRoom(X, Y);
+        }
     }
+}
+
+void ALevelManager::ActivateRoomAt(int32 X, int32 Y)
+{
+    if (ARoom* Room = GetRoomAt(X, Y))
+    {
+        Room->ActivateRoom();
+    }
+}
+
+void ALevelManager::DeactivateAllRooms()
+{
+    for (auto& RoomEntry : LevelGrid)
+    {
+        ARoom* Room = RoomEntry.Value;
+        if (Room)
+        {
+            Room->DeactivateRoom();
+        }
+    }
+}
+
+ARoom* ALevelManager::GetRoomAt(int32 X, int32 Y) const
+{
+    // Create a key FIntPoint with X and Y
+    FIntPoint RoomKey(X, Y);
+
+    // Check if the map contains this key
+    if (LevelGrid.Contains(RoomKey))
+    {
+        // If the key exists, return the pointer to the room
+        return LevelGrid[RoomKey];
+    }
+
+    // If the key does not exist, return nullptr
+    return nullptr;
 }

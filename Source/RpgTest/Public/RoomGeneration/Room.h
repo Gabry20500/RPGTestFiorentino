@@ -6,13 +6,19 @@
 #include "GameFramework/Actor.h"
 #include "Room.generated.h"
 
+class ADoor;
+class AHealthFountain;
+class AChest;
+class AEnemy;
+
 UENUM(BlueprintType)
 enum class ERoomType : uint8
 {
-	HealingFountain,
-	Chest,
-	Mimic,
-	EnemyRoom
+    Empty UMETA(DisplayName = "Empty Room"),
+    HealingFountain UMETA(DisplayName = "Healing Fountain Room"),
+    Chest UMETA(DisplayName = "Chest Room"),
+    Mimic UMETA(DisplayName = "Mimic Room"),
+    Enemy UMETA(DisplayName = "Enemy Room")
 };
 
 UCLASS()
@@ -20,29 +26,82 @@ class RPGTEST_API ARoom : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ARoom();
+public:
+    // Sets default values for this actor's properties
+    ARoom();
+
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
+
+    /**
+     * Sets the content of the room based on RoomID.
+     * @param RoomID Unique identifier for the room's content.
+     */
+    void SetRoomContent(int32 RoomID);
+
+    /** Marks the room as completed. */
+    void MarkAsCompleted();
+
+    /**
+     * Links doors to adjacent rooms.
+     * @param NorthRoom Room to the north.
+     * @param SouthRoom Room to the south.
+     * @param EastRoom Room to the east.
+     * @param WestRoom Room to the west.
+     */
+    void LinkDoors(ARoom* NorthRoom, ARoom* SouthRoom, ARoom* EastRoom, ARoom* WestRoom);
+
+    /** Activates the room and its doors. */
+    void ActivateRoom();
+
+    /** Deactivates the room and its doors. */
+    void DeactivateRoom();
+
+    /** Type of room. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))
+    ERoomType RoomType;
+    
+    /** Reference to the north door. */
+    UPROPERTY()
+    ADoor* NorthDoor;
+
+    /** Reference to the south door. */
+    UPROPERTY()
+    ADoor* SouthDoor;
+
+    /** Reference to the east door. */
+    UPROPERTY()
+    ADoor* EastDoor;
+
+    /** Reference to the west door. */
+    UPROPERTY()
+    ADoor* WestDoor;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Room")
+    int32 RoomX;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Room")
+    int32 RoomY;
+
+    // Getter per le coordinate della stanza
+    int32 GetRoomX() const { return RoomX; }
+    int32 GetRoomY() const { return RoomY; }
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:
-	void SetRoomContent(int32 RoomID);
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room")
-	ERoomType RoomType;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Room")
-	TArray<TSubclassOf<AActor>> EnemyBlueprints;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Room")
-	bool bIsCompleted; // Stato della stanza
-
-	void MarkAsCompleted(); // Funzione per marcare la stanza come completata
+    /** Spawns room content based on room type. */
+    void SpawnRoomContent();
 
 private:
-	void SpawnRoomContent();
+
+    /** Blueprints for enemies to spawn in enemy rooms. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))
+    TArray<TSubclassOf<AEnemy>> EnemyBlueprints;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))
+    TArray<TSubclassOf<AActor>> InteractBlueprints;
+
+    /** Indicates if the room has been completed. */
+    UPROPERTY(BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))
+    bool bIsCompleted;
 
 };

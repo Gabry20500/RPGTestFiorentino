@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	void ApplyDamage(int DamageAmount);
 
+
+    int GetHealth() {return Health;}
+
 protected:
     void MoveToPlayer();
 

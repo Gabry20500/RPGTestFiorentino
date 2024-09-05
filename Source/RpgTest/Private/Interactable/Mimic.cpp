@@ -8,10 +8,11 @@
 
 AMimic::AMimic()
 {
-    PrimaryActorTick.bCanEverTick = true; // Assicurati che questo sia true
+    PrimaryActorTick.bCanEverTick = true;
 
     Status = EMimicStatus::Chest;
     MoveSpeed = 150.0f;
+    bIsChasingPlayer = false;
 }
 
 void AMimic::BeginPlay()
@@ -24,30 +25,41 @@ void AMimic::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    MoveMimic(DeltaTime);
+    if (Status == EMimicStatus::Mimic)
+    {
+        MoveMimic(DeltaTime);
+    }
+    else 
+    {
+        bIsChasingPlayer = false;
+    }
 }
 
 void AMimic::TransformToEnemy()
 {
-        Status = EMimicStatus::Mimic;
+    Status = EMimicStatus::Mimic;
 
-        SetActorEnableCollision(true);
-        SetActorTickEnabled(true);
+    SetActorEnableCollision(true);
+    SetActorTickEnabled(true);
 
-        Health = 100;
-        Damage = 20;
-        AttackRange = 300.0f;
-        AttackCooldown = 1.5f;
-        MoveSpeed = 100.0f;
+    Health = 100;
+    Damage = 20;
+    AttackRange = 80.0f;
+    AttackCooldown = 3.f;
+    MoveSpeed = 50.0f;
 
-        UCapsuleComponent* Capsule = FindComponentByClass<UCapsuleComponent>();
-        if (Capsule)
-        {
-            Capsule->SetCollisionProfileName(TEXT("Pawn"));
-        }
+    // Ora inizia a inseguire il giocatore
+    bIsChasingPlayer = true;
 
-        UE_LOG(LogTemp, Log, TEXT("Il mimic si è trasformato in un nemico!"));
+    UCapsuleComponent* Capsule = FindComponentByClass<UCapsuleComponent>();
+    if (Capsule)
+    {
+        Capsule->SetCollisionProfileName(TEXT("Pawn"));
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Il mimic si è trasformato in un nemico!"));
 }
+
 
 void AMimic::DetermineDirection()
 {
@@ -95,9 +107,13 @@ void AMimic::MoveMimic(float Time)
 
             SetActorLocation(GetActorLocation() + DirectionToPlayer * MoveSpeed * Time);
 
-            if (FVector::Dist(GetActorLocation(), Player->GetActorLocation()) <= AttackRange)
+            float DistanceToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
+
+            // Attacca solo se è nella distanza corretta e può attaccare
+            if (DistanceToPlayer <= AttackRange && bCanAttack)
             {
                 PerformMeleeAttack();
+                StartAttackCooldown();  // Inizia il cooldown dopo l'attacco
             }
         }
     }

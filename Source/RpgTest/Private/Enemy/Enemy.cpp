@@ -59,12 +59,19 @@ void AEnemy::ApplyDamage(int DamageAmount)
 {
     Health -= DamageAmount;
 
-    // Check if health has dropped to zero or below
+    // Controlla se la salute è scesa a zero o sotto
     if (Health <= 0)
     {
         Health = 0;
-        // Handle actor's death (could be destroying the actor or playing a death animation)
-        Destroy(); // For now, we'll just destroy the actor
+
+        // Il giocatore ottiene esperienza quando uccide un nemico
+        if (TargetPlayer)
+        {
+            int32 XPReward = 20; // Imposta l'esperienza ottenuta uccidendo il nemico
+            TargetPlayer->GainXP(XPReward);
+        }
+
+        Destroy(); // Distruggi l'attore nemico
     }
 
     UE_LOG(LogTemp, Log, TEXT("%d"), Health);
@@ -125,7 +132,13 @@ void AEnemy::ResetAttack()
 void AEnemy::PerformMeleeAttack()
 {
     UE_LOG(LogTemp, Warning, TEXT("Base Melee Attack!"));
-    TargetPlayer->ApplyDamage(Damage);
+    if (TargetPlayer)
+    {
+        TargetPlayer->ApplyDamage(Damage);
+    }
+
+    // Assicurati che l'attacco rispetti il cooldown
+    StartAttackCooldown();
 }
 
 void AEnemy::PerformRangedAttack()

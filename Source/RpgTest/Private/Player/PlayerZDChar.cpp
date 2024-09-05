@@ -25,6 +25,38 @@ APlayerZDChar::APlayerZDChar()
     bCanInteract = false;
     InteractableActor = nullptr;
 
+    PlayerLevel = 1;
+    CurrentXP = 0;
+    XPToNextLevel = 100;
+}
+
+void APlayerZDChar::GainXP(int32 Amount)
+{
+    CurrentXP += Amount;
+
+    UE_LOG(LogTemp, Log, TEXT("XP Gained: %d, Current XP: %d"), Amount, CurrentXP);
+
+    if (CurrentXP >= XPToNextLevel)
+    {
+        CurrentXP -= XPToNextLevel;
+        PlayerLevel++;
+        XPToNextLevel += 50; 
+
+        UE_LOG(LogTemp, Warning, TEXT("Level Up! New Level: %d | Next Level XP: %d | Current XP : %d"), PlayerLevel, XPToNextLevel, CurrentXP);
+
+        Health += 20;
+        Damage += 5;  
+    }
+}
+
+int APlayerZDChar::GetPlyHealth() const
+{
+    return Health;
+}
+
+int APlayerZDChar::GetPlyShield() const
+{
+    return Shield;
 }
 
 void APlayerZDChar::BeginPlay()
@@ -138,6 +170,8 @@ void APlayerZDChar::Attack()
             if (AEnemy* Enemy = Cast<AEnemy>(HitResult.GetActor()))
             {
                 Enemy->ApplyDamage(Damage);
+
+                UE_LOG(LogTemp, Warning, TEXT("Enemy: %s | Health: %d"), *Enemy->GetName(), Enemy->GetHealth());
             }        
         }
 

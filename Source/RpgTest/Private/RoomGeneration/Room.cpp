@@ -172,7 +172,7 @@ void ARoom::SpawnRoomContent()
         break;
 
     case ERoomType::Mimic:
-
+        GetWorld()->SpawnActor<AMimic>(InteractBlueprints[2], GetActorLocation() + FVector(15.f, 40.f, 300.f), FRotator::ZeroRotator);
         break;
 
     case ERoomType::Enemy:

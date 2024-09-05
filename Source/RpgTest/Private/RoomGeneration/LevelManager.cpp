@@ -67,10 +67,10 @@ void ALevelManager::InitializeDoors()
         if (CurrentRoom)
         {
             // Get adjacent rooms for this room
-            ARoom* NorthRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY + 1);
-            ARoom* SouthRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY - 1);
-            ARoom* EastRoom = GetRoomAt(CurrentRoom->RoomX + 1, CurrentRoom->RoomY);
-            ARoom* WestRoom = GetRoomAt(CurrentRoom->RoomX - 1, CurrentRoom->RoomY);
+            ARoom* NorthRoom = GetRoomAt(CurrentRoom->RoomX + 1, CurrentRoom->RoomY);
+            ARoom* SouthRoom = GetRoomAt(CurrentRoom->RoomX - 1, CurrentRoom->RoomY);
+            ARoom* EastRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY + 1);
+            ARoom* WestRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY - 1);
 
             // Now link the doors
             CurrentRoom->LinkDoors(NorthRoom, SouthRoom, EastRoom, WestRoom);

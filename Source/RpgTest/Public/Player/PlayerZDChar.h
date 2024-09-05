@@ -38,6 +38,25 @@ public:
 	// Declare the function to get the current room
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	ARoom* GetCurrentRoom() const;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerStats")
+	int32 PlayerLevel;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerStats")
+	int32 CurrentXP;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerStats")
+	int32 XPToNextLevel;
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
+	void GainXP(int32 Amount);
+
+	UFUNCTION(BlueprintPure, Category = "PlayerStats")
+	int GetPlyHealth() const;
+	
+	UFUNCTION(BlueprintPure, Category = "PlayerStats")
+	int GetPlyShield() const;
+
 protected:
 
 	void BeginPlay();

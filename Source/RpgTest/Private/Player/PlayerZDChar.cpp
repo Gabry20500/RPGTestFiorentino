@@ -59,6 +59,16 @@ int APlayerZDChar::GetPlyShield() const
     return Shield;
 }
 
+void APlayerZDChar::IncreaseShield(float Amount)
+{
+    Shield += Amount;
+}
+
+void APlayerZDChar::IncreaseAttack(float Amount)
+{
+    Damage += Amount;
+}
+
 void APlayerZDChar::BeginPlay()
 {
 	Super::BeginPlay();

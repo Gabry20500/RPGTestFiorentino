@@ -57,6 +57,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "PlayerStats")
 	int GetPlyShield() const;
 
+	void IncreaseShield(float Amount);
+
+	void IncreaseAttack(float Amount);
+
 protected:
 
 	void BeginPlay();

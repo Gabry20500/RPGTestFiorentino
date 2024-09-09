@@ -19,11 +19,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	FString ItemName;
 public:
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	FString GetItemName() const;
 
-private:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item", meta = (AllowPrivateAccess = "true"))
-	FString ItemName;
 };

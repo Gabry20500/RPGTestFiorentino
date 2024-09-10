@@ -13,6 +13,11 @@
 #include <RoomGeneration/Room.h>
 #include <RoomGeneration/LevelManager.h>
 #include <Kismet/GameplayStatics.h>
+#include "Item/AttackPotion.h"
+#include "Item/ShieldPotion.h"
+#include "Blueprint/UserWidget.h"
+#include "Minimap/Minimap.h"
+#include <Kismet/GameplayStatics.h>
 
 APlayerZDChar::APlayerZDChar()
 {
@@ -24,10 +29,14 @@ APlayerZDChar::APlayerZDChar()
 
     bCanInteract = false;
     InteractableActor = nullptr;
+    bIsMinimapVisible = false;
 
     PlayerLevel = 1;
     CurrentXP = 0;
     XPToNextLevel = 100;
+
+    AttackPotionCount = 0;
+    ShieldPotionCount = 0;
 }
 
 void APlayerZDChar::GainXP(int32 Amount)
@@ -69,6 +78,34 @@ void APlayerZDChar::IncreaseAttack(float Amount)
     Damage += Amount;
 }
 
+void APlayerZDChar::ManageMinimap()
+{
+    if (bIsMinimapVisible == false)
+    {
+        if (ALevelManager* LevelManager = GetLevelManager())
+        {
+            LevelManager->ToggleMinimap(true);
+            bIsMinimapVisible = true;
+        }
+    }
+    else
+    {
+        if (ALevelManager* LevelManager = GetLevelManager())
+        {
+            LevelManager->ToggleMinimap(false);
+            bIsMinimapVisible = false;
+        }
+    }
+}
+
+void APlayerZDChar::HideMinimap()
+{
+    if (ALevelManager* LevelManager = GetLevelManager())
+    {
+        LevelManager->ToggleMinimap(false);
+    }
+}
+
 void APlayerZDChar::BeginPlay()
 {
 	Super::BeginPlay();
@@ -76,6 +113,8 @@ void APlayerZDChar::BeginPlay()
 	AnimationComponent = Cast<UPaperZDAnimationComponent>(GetComponentByClass(UPaperZDAnimationComponent::StaticClass()));
 
 	PlyRotation = FPlayerDirection::Down;
+
+    
 }
 
 void APlayerZDChar::Tick(float DeltaTime)
@@ -91,6 +130,12 @@ void APlayerZDChar::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	InputComponent->BindAxis("MoveForeward", this, &APlayerZDChar::MoveForeward);
 	InputComponent->BindAction("Attack", IE_Pressed, this, &APlayerZDChar::Attack);
     InputComponent->BindAction("Interact", IE_Pressed, this, &APlayerZDChar::Interact);
+
+    InputComponent->BindAction("UseShieldPotion", IE_Pressed, this, &APlayerZDChar::UseShieldPotion);
+    InputComponent->BindAction("UseAttackPotion", IE_Pressed, this, &APlayerZDChar::UseAttackPotion);
+
+    InputComponent->BindAction("ToggleMinimap", IE_Pressed, this, &APlayerZDChar::ManageMinimap);
+
 }
 
 FRotator APlayerZDChar::GetRotation()
@@ -198,21 +243,81 @@ void APlayerZDChar::MovePlayer(FVector Direction)
     UE_LOG(LogTemp, Warning, TEXT("Player moved to: %s"), *NewLocation.ToString());
 }
 
+ALevelManager* APlayerZDChar::GetLevelManager() const
+{
+    return Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass()));
+}
+
+
+
+void APlayerZDChar::UseShieldPotion()
+{
+    if (ShieldPotionCount > 0)
+    {
+        IncreaseShield(50.0f);
+        ShieldPotionCount--;
+        UE_LOG(LogTemp, Log, TEXT("Usata pozione di scudo. Scudo attuale: %d | Pozioni rimaste: %d"), Shield, ShieldPotionCount);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Non hai pozioni di scudo!"));
+    }
+}
+
+void APlayerZDChar::UseAttackPotion()
+{
+    if (AttackPotionCount > 0)
+    {
+        IncreaseAttack(10);
+        AttackPotionCount--;
+        UE_LOG(LogTemp, Log, TEXT("Pozione di attacco usata! Attacco attuale: %d | Pozioni d'attacco rimaste: %d"), Damage, AttackPotionCount);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Non ci sono pozioni di attacco!"));
+    }
+}
+
 void APlayerZDChar::ApplyDamage(int DamageAmount)
 {
-    Health -= DamageAmount;
+    UE_LOG(LogTemp, Log, TEXT("Applying Damage: %d"), DamageAmount);
 
-    // Check if health has dropped to zero or below
-    if (Health <= 0)
+    // Se il giocatore ha scudo, intacca prima quello
+    if (Shield > 0)
     {
-        Health = 0;
-        APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+        if (DamageAmount <= Shield)
+        {
+            // Il danno è inferiore o uguale allo scudo, quindi riduce solo lo scudo
+            Shield -= DamageAmount;
+            UE_LOG(LogTemp, Log, TEXT("Damage absorbed by shield. Remaining shield: %d"), Shield);
+        }
+        else
+        {
+            // Il danno eccede lo scudo, quindi intacca anche la salute
+            int32 RemainingDamage = DamageAmount - Shield;
+            Shield = 0; // Scudo esaurito
+            UE_LOG(LogTemp, Log, TEXT("Shield depleted. Remaining damage to health: %d"), RemainingDamage);
 
-        // Call the QuitGame function
-        UKismetSystemLibrary::QuitGame(GetWorld(), PlayerController, EQuitPreference::Quit, false);
+            // Riduci la salute con il danno rimanente
+            Health -= RemainingDamage;
+        }
+    }
+    else
+    {
+        // Se non c'è scudo, applica tutto il danno alla salute
+        Health -= DamageAmount;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("%d"), Health);
+    // Log del valore della salute residua
+    UE_LOG(LogTemp, Log, TEXT("Remaining health: %d"), Health);
+
+    // Se la salute va a 0 o meno, considera il giocatore morto
+    if (Health <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player is dead!"));
+        // Qui puoi implementare la logica per la morte del personaggio, come ad esempio giocare un'animazione, cambiare stato, etc.
+
+    };
 }
 
 void APlayerZDChar::Interact()
@@ -314,8 +419,24 @@ void APlayerZDChar::ReciveItem(AItem* Item)
 {
     if (Item)
     {
-        UE_LOG(LogTemp, Log, TEXT("Ricevuto oggetto: %s"), *Item->GetItemName());
+        UE_LOG(LogTemp, Log, TEXT("Received Item: %s"), *Item->GetClass()->GetName());
 
+        if (Item->IsA(AAttackPotion::StaticClass()))
+        {
+            AttackPotionCount++;
+            UE_LOG(LogTemp, Log, TEXT("Received a Attack Potion. Total: %d"), AttackPotionCount);
+        }
+        else if (Item->IsA(AShieldPotion::StaticClass()))
+        {
+            ShieldPotionCount++;
+            UE_LOG(LogTemp, Log, TEXT("Received a Shield Potion. Total: %d"), ShieldPotionCount);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Received an item of unknown type."));
+        }
+
+        // Distruggi l'oggetto dopo che è stato ricevuto
         Item->Destroy();
     }
 }

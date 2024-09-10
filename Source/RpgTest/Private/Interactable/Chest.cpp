@@ -3,6 +3,7 @@
 
 #include "Interactable/Chest.h"
 #include "Player/PlayerZDChar.h"
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
 AChest::AChest()
@@ -38,21 +39,39 @@ void AChest::ChangeFlipbook()
 
 void AChest::GiveItemToPlayer(APlayerZDChar* Player)
 {
-	if (bIsOpened && ContainedItemClass && Player)
+	if (bIsOpened && Player)
 	{
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			// Creare l'oggetto e assegnarlo al player
-			AItem* Item = World->SpawnActor<AItem>(ContainedItemClass);
-			if (Item)
+			// Select a random item
+			TSubclassOf<AItem> SelectedItemClass = GetRandomItem();
+
+			if (SelectedItemClass)
 			{
-				// Logica per aggiungere l'oggetto all'inventario del player
-				// Qui dovresti aggiungere la funzione del player per ricevere l'oggetto
-				//Player->ReciveItem(Item);
-				UE_LOG(LogTemp, Log, TEXT("Il giocatore ha ricevuto: %s"), *Item->GetItemName());
+				// Create the item and give it to the player
+				AItem* Item = World->SpawnActor<AItem>(SelectedItemClass);
+				if (Item)
+				{
+					// Call ReceiveItem on the player to handle adding the item to their inventory
+					Player->ReciveItem(Item);
+					UE_LOG(LogTemp, Log, TEXT("Player received: %s"), *Item->GetItemName());
+				}
 			}
 		}
 	}
+}
+
+TSubclassOf<AItem> AChest::GetRandomItem()
+{
+	if (ItemPool.Num() > 0)
+	{
+		// Seleziona un indice casuale dall'array di oggetti
+		int32 RandomIndex = UKismetMathLibrary::RandomIntegerInRange(0, ItemPool.Num() - 1);
+		return ItemPool[RandomIndex];
+	}
+
+	// Se non ci sono oggetti nella pool, restituisci nullptr
+	return nullptr;
 }
 

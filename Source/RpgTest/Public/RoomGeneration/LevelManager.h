@@ -40,6 +40,15 @@ public:
     void ActivateRoomAt(int32 X, int32 Y);
 
     void DeactivateAllRooms();
+
+    TMap<FIntPoint, ERoomType> GetRoomDataForMinimap() const;
+
+    void ToggleMinimap(bool bShow);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Minimap")
+    TSubclassOf<class UMinimap> MinimapWidgetClass; // Riferimento al Blueprint del widget
+    
+    UMinimap* MinimapWidget;
 private:
     /** Initializes the level grid. */
     void InitializeLevelGrid();
@@ -50,9 +59,15 @@ private:
     void SpawnAllRooms();
 
     /** Grid configuration and player position */
-    TMap<FIntPoint, ARoom*> LevelGrid; // Use TMap for better management
     const int32 GridWidth = 15;
     const int32 GridHeight = 21;
     int32 PlayerX;
     int32 PlayerY;
+
+    TSet<FIntPoint> VisitedRooms;
+
+
+    /** Grid configuration and player position */
+    TMap<FIntPoint, ARoom*> LevelGrid;
+
 };

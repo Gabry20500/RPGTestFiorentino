@@ -36,7 +36,9 @@ private:
     UPaperFlipbook* OpenedFlipbook;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chest", meta = (AllowPrivateAccess = "true"))
-    TSubclassOf<AItem> ContainedItemClass;
+    TArray<TSubclassOf<AItem>> ItemPool;
 
     bool bIsOpened;
+
+    TSubclassOf<AItem> GetRandomItem();
 };

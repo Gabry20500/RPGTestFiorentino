@@ -8,6 +8,10 @@
 #include "Enemy/GhostEnemy.h"
 #include "Enemy/RatEnemy.h"
 #include "Enemy/SlimeEnemy.h"
+#include "Blueprint/UserWidget.h"
+#include "Minimap/Minimap.h"
+#include <Kismet/GameplayStatics.h>
+
 
 // Sets default values
 ALevelManager::ALevelManager()
@@ -22,6 +26,7 @@ ALevelManager::ALevelManager()
 void ALevelManager::BeginPlay()
 {
     Super::BeginPlay();
+
     InitializeLevelGrid();   // Clear any previous level data
 
     for (int32 X = 0; X < GridWidth; ++X)
@@ -34,8 +39,21 @@ void ALevelManager::BeginPlay()
 
     InitializeDoors();
 
-   // DeactivateAllRooms();
-    //ActivateRoomAt(PlayerX, PlayerY);;
+    if (MinimapWidgetClass)
+    {
+        UWorld* World = GetWorld();
+        if (World)
+        {
+            MinimapWidget = CreateWidget<UMinimap>(World, MinimapWidgetClass);
+            if (MinimapWidget)
+            {
+                MinimapWidget->AddToViewport();
+                MinimapWidget->SetVisibility(ESlateVisibility::Hidden); // Start hidden
+
+                MinimapWidget->InitializeMinimap(GridWidth, GridHeight);
+            }
+        }
+    }
 }
 
 void ALevelManager::InitializeLevelGrid()
@@ -53,9 +71,12 @@ void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
         PlayerX = NewX;
         PlayerY = NewY;
 
-        //DeactivateAllRooms();
-
-        //ActivateRoomAt(PlayerX, PlayerY);
+        // Update minimap when player moves
+        if (MinimapWidget)
+        {
+            TMap<FIntPoint, ERoomType> RoomData = GetRoomDataForMinimap();
+            MinimapWidget->UpdateMinimap(RoomData);
+        }
     }
 }
 
@@ -140,6 +161,45 @@ void ALevelManager::SpawnAllRooms()
     }
 }
 
+TMap<FIntPoint, ERoomType> ALevelManager::GetRoomDataForMinimap() const
+{
+    TMap<FIntPoint, ERoomType> RoomData;
+
+    for (const auto& RoomEntry : LevelGrid)
+    {
+        const FIntPoint& RoomKey = RoomEntry.Key;
+        ARoom* Room = RoomEntry.Value;
+
+        if (Room)
+        {
+            RoomData.Add(RoomKey, Room->RoomType);
+        }
+    }
+
+    return RoomData;
+}
+
+void ALevelManager::ToggleMinimap(bool bShow)
+{
+    if (MinimapWidget)
+    {
+        if (bShow)
+        {
+            // Show the minimap and update it
+            MinimapWidget->SetVisibility(ESlateVisibility::Visible);
+
+            // Update the minimap only when showing it
+            TMap<FIntPoint, ERoomType> RoomData = GetRoomDataForMinimap();
+            MinimapWidget->UpdateMinimap(RoomData);
+        }
+        else
+        {
+            // Hide the minimap without removing it from the viewport
+            MinimapWidget->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+}
+
 void ALevelManager::ActivateRoomAt(int32 X, int32 Y)
 {
     if (ARoom* Room = GetRoomAt(X, Y))
@@ -159,6 +219,8 @@ void ALevelManager::DeactivateAllRooms()
         }
     }
 }
+
+
 
 ARoom* ALevelManager::GetRoomAt(int32 X, int32 Y) const
 {

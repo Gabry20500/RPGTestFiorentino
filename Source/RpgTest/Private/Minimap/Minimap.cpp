@@ -8,38 +8,52 @@
 
 
 
-void UMinimap::UpdateMinimap(const TMap<FIntPoint, ERoomType>& RoomData)
+void UMinimap::UpdateMinimap(const TMap<FIntPoint, ARoom*>& RoomData)
 {
-    for (const TPair<FIntPoint, ERoomType>& RoomEntry : RoomData)
+    for (const TPair<FIntPoint, ARoom*>& RoomPair : RoomData)
     {
-        FIntPoint RoomKey = RoomEntry.Key;
-        ERoomType RoomType = RoomEntry.Value;
+        FIntPoint RoomCoordinates = RoomPair.Key;
+        ARoom* Room = RoomPair.Value;
 
-        if (RoomImages.Contains(RoomKey))
+        // Trova l'immagine della stanza basata sulle coordinate
+        if (UImage** RoomImagePtr = RoomImages.Find(RoomCoordinates))
         {
-            UImage* RoomImage = *RoomImages.Find(RoomKey);
+            UImage* RoomImage = *RoomImagePtr;
 
-            // Update the image based on the room type
-            if (RoomImage)
+            // Se la stanza è esplorata, usa l'icona corrispondente
+            if (Room->IsExplored())
             {
-                switch (RoomType)
+                switch (Room->RoomType)
                 {
+                case ERoomType::Empty:
+                    RoomImage->SetBrushFromTexture(EmptyRoomIcon);
+                    break;
+
                 case ERoomType::HealingFountain:
                     RoomImage->SetBrushFromTexture(HealingFountainIcon);
                     break;
+
                 case ERoomType::Chest:
                     RoomImage->SetBrushFromTexture(ChestRoomIcon);
                     break;
+
                 case ERoomType::Mimic:
                     RoomImage->SetBrushFromTexture(MimicRoomIcon);
                     break;
+
                 case ERoomType::Enemy:
                     RoomImage->SetBrushFromTexture(EnemyRoomIcon);
                     break;
+
                 default:
-                    RoomImage->SetBrushFromTexture(UnexploredRoomIcon);
+                    RoomImage->SetBrushFromTexture(EmptyRoomIcon);
                     break;
                 }
+            }
+            else
+            {
+                // Se la stanza non è esplorata, usa l'icona generica
+                RoomImage->SetBrushFromTexture(GenericRoomIcon);
             }
         }
     }
@@ -49,6 +63,7 @@ void UMinimap::InitializeMinimap(int32 GridWidth, int32 GridHeight)
 {
     if (MinimapGrid)
     {
+        // Clear any existing widgets in the grid
         MinimapGrid->ClearChildren();
         RoomImages.Empty();
 
@@ -59,13 +74,15 @@ void UMinimap::InitializeMinimap(int32 GridWidth, int32 GridHeight)
             {
                 // Create a new image for each room
                 UImage* RoomImage = NewObject<UImage>(this);
-                RoomImage->SetBrushFromTexture(UnexploredRoomIcon);
+
+                // Set the initial icon to be the unexplored room icon
+                RoomImage->SetBrushFromTexture(GenericRoomIcon);
                 RoomImage->SetVisibility(ESlateVisibility::Visible);
 
                 // Add the image to the grid at the corresponding location
                 MinimapGrid->AddChildToUniformGrid(RoomImage, Y, X);
 
-                // Save the reference in the map
+                // Save the reference in the map for later updates
                 RoomImages.Add(FIntPoint(X, Y), RoomImage);
             }
         }

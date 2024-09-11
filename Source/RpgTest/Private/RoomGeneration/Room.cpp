@@ -8,8 +8,11 @@
 #include "Interactable/Mimic.h"
 #include "Enemy/Enemy.h"
 #include "RoomGeneration/Door.h"
+#include "RoomGeneration/LevelManager.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/ActorComponent.h"
+#include <Minimap/Minimap.h>
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 ARoom::ARoom()
@@ -156,6 +159,20 @@ void ARoom::DeactivateRoom()
     {
         WestDoor->SetActorHiddenInGame(true);
         WestDoor->SetActorEnableCollision(false);
+    }
+}
+
+void ARoom::MarkAsExplored()
+{
+    bIsExplored = true;
+
+    ALevelManager* LMInstance = Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass()));
+    UMinimap* Minimap = LMInstance->MinimapWidget;
+    if (Minimap)
+    {
+        TMap<FIntPoint, ARoom*> RoomData;
+        RoomData.Add(FIntPoint(RoomX, RoomY), this);
+        Minimap->UpdateMinimap(RoomData);
     }
 }
 

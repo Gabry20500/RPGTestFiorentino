@@ -41,7 +41,7 @@ public:
 
     void DeactivateAllRooms();
 
-    TMap<FIntPoint, ERoomType> GetRoomDataForMinimap() const;
+    TMap<FIntPoint, ARoom*> GetRoomDataForMinimap() const;
 
     void ToggleMinimap(bool bShow);
 

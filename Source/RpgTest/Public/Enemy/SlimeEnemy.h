@@ -21,4 +21,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void PerformMeleeAttack() override;
+
+	float PoisonDamage;
 };

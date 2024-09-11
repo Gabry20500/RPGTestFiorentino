@@ -37,5 +37,9 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rat", meta = (AllowPrivateAccess = "true"))
     ERatDirection CurrentDirection;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Poison", meta = (AllowPrivateAccess = "true"))
+    float BurnDamage;
+
     void DetermineDirection();
+ 
 };

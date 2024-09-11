@@ -10,6 +10,8 @@ ASlimeEnemy::ASlimeEnemy()
     AttackRange = 100.0f;
     AttackCooldown = 2.0f;
     bIsRanged = false;
+
+    PoisonDamage = 5.f;
 }
 
 void ASlimeEnemy::BeginPlay()
@@ -22,5 +24,10 @@ void ASlimeEnemy::PerformMeleeAttack()
     UE_LOG(LogTemp, Warning, TEXT("Slime attacks with melee!"));
     
     Super::PerformMeleeAttack();
+
+    if (TargetPlayer)
+    {
+        TargetPlayer->ApplyState(EPlayerState::Poisoned, PoisonDamage);
+    }
 
 }

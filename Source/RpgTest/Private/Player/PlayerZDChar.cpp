@@ -19,6 +19,7 @@
 #include "Minimap/Minimap.h"
 #include <Kismet/GameplayStatics.h>
 
+
 APlayerZDChar::APlayerZDChar()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -78,6 +79,27 @@ void APlayerZDChar::IncreaseAttack(float Amount)
     Damage += Amount;
 }
 
+void APlayerZDChar::ApplyState(EPlayerState NewState, float StateDuration)
+{
+    CurrentState = NewState;
+
+    UpdatePlayerColor();
+
+    switch (CurrentState)
+    {
+    case EPlayerState::Poisoned:
+        PoisonDuration = StateDuration;
+        GetWorldTimerManager().SetTimer(StateTimerHandle, this, &APlayerZDChar::PoisonTick, 1.0f, true);
+        break;
+    case EPlayerState::Burning:
+        BurningDuration = StateDuration;
+        GetWorldTimerManager().SetTimer(StateTimerHandle, this, &APlayerZDChar::BurnTick, 1.0f, true);
+        break;
+    default:
+        break;
+    }
+}
+
 void APlayerZDChar::ManageMinimap()
 {
     if (bIsMinimapVisible == false)
@@ -111,6 +133,7 @@ void APlayerZDChar::BeginPlay()
 	Super::BeginPlay();
 
 	AnimationComponent = Cast<UPaperZDAnimationComponent>(GetComponentByClass(UPaperZDAnimationComponent::StaticClass()));
+    PlayerFlipbook = FindComponentByClass<UPaperFlipbookComponent>();
 
 	PlyRotation = FPlayerDirection::Down;
 
@@ -240,12 +263,71 @@ void APlayerZDChar::MovePlayer(FVector Direction)
     FVector NewLocation = GetActorLocation() + Direction;
     SetActorLocation(NewLocation);
 
+    // Trova il LevelManager
+    ALevelManager* LevelManager = GetLevelManager();
+    if (LevelManager)
+    {
+        // Convert NewLocation to grid coordinates (assuming each grid cell is 1500 units in size)
+        int32 NewX = FMath::RoundToInt(NewLocation.X / 1500.0f);
+        int32 NewY = FMath::RoundToInt(NewLocation.Y / 1500.0f);
+
+        LevelManager->MovePlayer(NewX, NewY);
+    }
+
     UE_LOG(LogTemp, Warning, TEXT("Player moved to: %s"), *NewLocation.ToString());
 }
 
 ALevelManager* APlayerZDChar::GetLevelManager() const
 {
     return Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass()));
+}
+
+void APlayerZDChar::UpdatePlayerColor()
+{
+    switch (CurrentState)
+    {
+    case EPlayerState::Poisoned:
+        PlayerFlipbook->SetSpriteColor(FLinearColor::Green);
+        break;
+    case EPlayerState::Burning:
+        PlayerFlipbook->SetSpriteColor(FLinearColor::Red);
+        break;
+    case EPlayerState::Normal:
+    default:
+        PlayerFlipbook->SetSpriteColor(FLinearColor::White);
+        break;
+    }
+}
+
+void APlayerZDChar::PoisonTick()
+{
+    ApplyDamage(5);  // Danno da veleno ogni secondo
+    PoisonDuration -= 1.0f;
+
+    if (PoisonDuration <= 0.0f)
+    {
+        // Rimuove lo stato di avvelenamento
+        ClearState();
+    }
+}
+
+void APlayerZDChar::BurnTick()
+{
+    ApplyDamage(10);  // Danno da bruciore ogni secondo
+    BurningDuration -= 1.0f;
+
+    if (BurningDuration <= 0.0f)
+    {
+        // Rimuove lo stato di bruciore
+        ClearState();
+    }
+}
+
+void APlayerZDChar::ClearState()
+{
+    GetWorldTimerManager().ClearTimer(StateTimerHandle);
+    CurrentState = EPlayerState::Normal;
+    UpdatePlayerColor();
 }
 
 
@@ -349,19 +431,19 @@ void APlayerZDChar::Interact()
                 FVector Direction;
                 if (Door == CurrentRoom->NorthDoor)
                 {
-                    Direction = FVector(1500.0f, 0, 0); // Spostamento verso nord
+                    Direction = FVector(300.0f, 0, 0); // Spostamento verso nord
                 }
                 else if (Door == CurrentRoom->SouthDoor)
                 {
-                    Direction = FVector(-1500.0f, 0, 0); // Spostamento verso sud
+                    Direction = FVector(-300.0f, 0, 0); // Spostamento verso sud
                 }
                 else if (Door == CurrentRoom->EastDoor)
                 {
-                    Direction = FVector(0, 1500.0f, 0); // Spostamento verso est
+                    Direction = FVector(0, 300.0f, 0); // Spostamento verso est
                 }
                 else if (Door == CurrentRoom->WestDoor)
                 {
-                    Direction = FVector(0, -1500.0f, 0); // Spostamento verso ovest
+                    Direction = FVector(0, -300.0f, 0); // Spostamento verso ovest
                 }
 
                 // Sposta il giocatore

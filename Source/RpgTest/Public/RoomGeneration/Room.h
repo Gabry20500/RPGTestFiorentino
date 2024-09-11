@@ -57,6 +57,10 @@ public:
     /** Deactivates the room and its doors. */
     void DeactivateRoom();
 
+    void MarkAsExplored();
+
+    bool IsExplored() const { return bIsExplored; }
+
     /** Type of room. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))
     ERoomType RoomType;
@@ -92,6 +96,8 @@ protected:
     void SpawnRoomContent();
 
 private:
+
+    bool bIsExplored;
 
     /** Blueprints for enemies to spawn in enemy rooms. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Room", meta = (AllowPrivateAccess = "true"))

@@ -39,6 +39,12 @@ void ALevelManager::BeginPlay()
 
     InitializeDoors();
 
+    // Marca la stanza iniziale come esplorata
+    if (ARoom* InitialRoom = GetRoomAt(PlayerX, PlayerY))
+    {
+        InitialRoom->MarkAsExplored();
+    }
+
     if (MinimapWidgetClass)
     {
         UWorld* World = GetWorld();
@@ -50,7 +56,7 @@ void ALevelManager::BeginPlay()
                 MinimapWidget->AddToViewport();
                 MinimapWidget->SetVisibility(ESlateVisibility::Hidden); // Start hidden
 
-                MinimapWidget->InitializeMinimap(GridWidth, GridHeight);
+                MinimapWidget->InitializeMinimap(GridHeight, GridWidth);
             }
         }
     }
@@ -63,18 +69,28 @@ void ALevelManager::InitializeLevelGrid()
 
 void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
 {
-    int32 NewX = PlayerX + DeltaX;
-    int32 NewY = PlayerY + DeltaY;
+    PlayerX = DeltaX;
+    PlayerY = DeltaY;
 
-    if (NewX >= 0 && NewX < GridWidth && NewY >= 0 && NewY < GridHeight)
+    // Log the new position for debugging
+    UE_LOG(LogTemp, Log, TEXT("Player Position: X=%d, Y=%d"), PlayerX, PlayerY);
+
+    // Ensure that PlayerX and PlayerY are within bounds
+    PlayerX = FMath::Clamp(PlayerX, 0, GridWidth - 1);
+    PlayerY = FMath::Clamp(PlayerY, 0, GridHeight - 1);
+
+    // Call any necessary logic after the player moves
+    if (ARoom* CurrentRoom = GetRoomAt(PlayerX, PlayerY))
     {
-        PlayerX = NewX;
-        PlayerY = NewY;
+        if (!CurrentRoom->IsExplored())
+        {
+            CurrentRoom->MarkAsExplored();
+        }
 
-        // Update minimap when player moves
+        // Update minimap
         if (MinimapWidget)
         {
-            TMap<FIntPoint, ERoomType> RoomData = GetRoomDataForMinimap();
+            TMap<FIntPoint, ARoom*> RoomData = GetRoomDataForMinimap();
             MinimapWidget->UpdateMinimap(RoomData);
         }
     }
@@ -161,9 +177,9 @@ void ALevelManager::SpawnAllRooms()
     }
 }
 
-TMap<FIntPoint, ERoomType> ALevelManager::GetRoomDataForMinimap() const
+TMap<FIntPoint, ARoom*> ALevelManager::GetRoomDataForMinimap() const
 {
-    TMap<FIntPoint, ERoomType> RoomData;
+    TMap<FIntPoint, ARoom*> RoomData;
 
     for (const auto& RoomEntry : LevelGrid)
     {
@@ -172,7 +188,7 @@ TMap<FIntPoint, ERoomType> ALevelManager::GetRoomDataForMinimap() const
 
         if (Room)
         {
-            RoomData.Add(RoomKey, Room->RoomType);
+            RoomData.Add(RoomKey, Room);
         }
     }
 
@@ -189,7 +205,7 @@ void ALevelManager::ToggleMinimap(bool bShow)
             MinimapWidget->SetVisibility(ESlateVisibility::Visible);
 
             // Update the minimap only when showing it
-            TMap<FIntPoint, ERoomType> RoomData = GetRoomDataForMinimap();
+            TMap<FIntPoint, ARoom*> RoomData = GetRoomDataForMinimap();
             MinimapWidget->UpdateMinimap(RoomData);
         }
         else

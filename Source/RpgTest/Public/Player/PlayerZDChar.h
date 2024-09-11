@@ -16,6 +16,13 @@ enum class FPlayerDirection : uint8
 	Right
 };
 
+UENUM(BlueprintType)
+enum class EPlayerState : uint8
+{
+	Normal UMETA(DisplayName = "Normal"),
+	Poisoned UMETA(DisplayName = "Poisoned"),
+	Burning UMETA(DisplayName = "Burning")
+};
 
 UCLASS()
 class RPGTEST_API APlayerZDChar : public APaperZDCharacter
@@ -127,7 +134,16 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerStats")
 	int32 XPToNextLevel;
 
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player State")
+	EPlayerState CurrentState;
+
+	// Funzione per applicare uno stato al giocatore
+	void ApplyState(EPlayerState NewState, float StateDuration);
+
+	// Timer per gestire il danno e la durata dello stato
+	FTimerHandle StateTimerHandle;
+	float PoisonDuration;
+	float BurningDuration;
 
 	bool bIsMinimapVisible;
 
@@ -165,4 +181,13 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Level")
 	ALevelManager* GetLevelManager() const;
 
+	void UpdatePlayerColor();
+
+	// Funzioni per gestire il danno e la fine degli stati
+	void PoisonTick();
+	void BurnTick();
+	void ClearState();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class UPaperFlipbookComponent* PlayerFlipbook;
 };

@@ -12,18 +12,24 @@ ARatEnemy::ARatEnemy()
     AttackRange = 100.0f;
     AttackCooldown = 1.5f;
     bIsRanged = false;
+
+    BurnDamage = 5.0f;
 }
 
 void ARatEnemy::BeginPlay()
 {
     Super::BeginPlay();
+
 }
 
 void ARatEnemy::PerformMeleeAttack()
-{
-    UE_LOG(LogTemp, Warning, TEXT("Rat attacks with melee!"));
-    // Chiamata al metodo base
+{    
     Super::PerformMeleeAttack();
+
+    if (TargetPlayer)
+    {
+        TargetPlayer->ApplyState(EPlayerState::Burning, BurnDamage);
+    }
 }
 
 void ARatEnemy::Tick(float DeltaTime)

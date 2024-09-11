@@ -18,7 +18,7 @@ class RPGTEST_API UMinimap : public UUserWidget
 public:
     /** Updates the minimap with a new room */
     UFUNCTION(BlueprintCallable, Category = "Minimap")
-    void UpdateMinimap(const TMap<FIntPoint, ERoomType>& RoomData);
+    void UpdateMinimap(const TMap<FIntPoint, ARoom*>& RoomData);
 
     /** Sets the minimap grid size */
     UFUNCTION(BlueprintCallable, Category = "Minimap")
@@ -34,8 +34,12 @@ protected:
     class UUniformGridPanel* MinimapGrid;
 
     /** Image for unexplored rooms */
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")
-    UTexture2D* UnexploredRoomIcon;
+    UTexture2D* GenericRoomIcon;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")
+    UTexture2D* EmptyRoomIcon;
 
     /** Images for different room types */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")

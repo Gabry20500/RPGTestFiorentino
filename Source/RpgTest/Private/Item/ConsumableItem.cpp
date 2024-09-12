@@ -4,7 +4,9 @@
 #include "Item/ConsumableItem.h"
 #include "Player/PlayerZDChar.h"
 
+// Implementation of UseItem for AConsumableItem
 void AConsumableItem::UseItem(APlayerZDChar* Player)
 {
-	UE_LOG(LogTemp, Log, TEXT("Consumabile usato, effettua un'azione."));
+    // Log message indicating that a consumable item has been used
+    UE_LOG(LogTemp, Log, TEXT("Consumable used; performs an action."));
 }

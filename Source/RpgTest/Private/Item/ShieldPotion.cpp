@@ -4,19 +4,25 @@
 #include "Item/ShieldPotion.h"
 #include "Player/PlayerZDChar.h"
 
+// Constructor: Initializes default values for the shield potion
 AShieldPotion::AShieldPotion()
 {
+	// Set the amount of shield effect the potion provides
 	EffectAmount = 50.0f;
-	ItemName = TEXT("Pozione di Shield");
+
+	// Set the display name of the item
+	ItemName = TEXT("Shield Potion");
 }
 
+// Override of the UseItem function from AConsumableItem
 void AShieldPotion::UseItem(APlayerZDChar* Player)
 {
-	if (Player)
-	{
-		// Aggiunge shield al player (qui dovresti implementare la logica per aumentare il valore del "shield" del player)
-		Player->IncreaseShield(EffectAmount);
+    if (Player)
+    {
+        // Apply the shield boost effect to the player
+        Player->IncreaseShield(EffectAmount);
 
-		UE_LOG(LogTemp, Log, TEXT("Il giocatore ha usato una pozione di shield."));
-	}
+        // Log a message indicating that the shield potion has been used
+        UE_LOG(LogTemp, Log, TEXT("The player has used a shield potion."));
+    }
 }

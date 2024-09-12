@@ -4,18 +4,25 @@
 #include "Item/AttackPotion.h"
 #include "Player/PlayerZDChar.h"
 
+// Constructor: Initializes default values for the attack potion
 AAttackPotion::AAttackPotion()
 {
+	// Set the amount of attack effect the potion provides
 	EffectAmount = 20.0f;
-	ItemName = TEXT("Pozione di Attacco");
+
+	// Set the display name of the item
+	ItemName = TEXT("Attack Potion");
 }
 
+// Override of the UseItem function from AConsumableItem
 void AAttackPotion::UseItem(APlayerZDChar* Player)
 {
-	if (Player)
-	{
-		Player->IncreaseAttack(EffectAmount);
+    if (Player)
+    {
+        // Apply the attack boost effect to the player
+        Player->IncreaseAttack(EffectAmount);
 
-		UE_LOG(LogTemp, Log, TEXT("Il giocatore ha usato una pozione di attacco."));
-	}
+        // Log a message indicating that the potion has been used
+        UE_LOG(LogTemp, Log, TEXT("The player has used an attack potion."));
+    }
 }

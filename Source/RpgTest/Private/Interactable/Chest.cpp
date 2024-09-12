@@ -8,9 +8,10 @@
 // Sets default values
 AChest::AChest()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Enable ticking for this actor if required for dynamic behavior
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Initialize the chest as closed
 	bIsOpened = false;
 }
 
@@ -18,43 +19,54 @@ AChest::AChest()
 void AChest::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Find and assign the FlipbookComponent if it exists
 	FlipbookComponent = FindComponentByClass<UPaperFlipbookComponent>();
 
 	if (FlipbookComponent == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FlipbookComponent non trovato nella Chest!"));
+		// Log a warning if the FlipbookComponent is not found, which is crucial for chest animation
+		UE_LOG(LogTemp, Warning, TEXT("FlipbookComponent not found in Chest!"));
 	}
 }
 
 void AChest::ChangeFlipbook()
 {
+	// Ensure the chest has a flipbook component and the opened flipbook is set
 	if (FlipbookComponent && OpenedFlipbook && !bIsOpened)
 	{
+		// Set the flipbook to the opened animation
 		FlipbookComponent->SetFlipbook(OpenedFlipbook);
+
+		// Mark the chest as opened
 		bIsOpened = true;
-		UE_LOG(LogTemp, Log, TEXT("La chest è stata aperta."));
+
+		// Log that the chest has been opened
+		UE_LOG(LogTemp, Log, TEXT("The chest has been opened."));
 	}
 }
 
 void AChest::GiveItemToPlayer(APlayerZDChar* Player)
 {
+	// Ensure the chest is opened and the player is valid
 	if (bIsOpened && Player)
 	{
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			// Select a random item
+			// Select a random item from the item pool
 			TSubclassOf<AItem> SelectedItemClass = GetRandomItem();
 
 			if (SelectedItemClass)
 			{
-				// Create the item and give it to the player
+				// Spawn the item in the world
 				AItem* Item = World->SpawnActor<AItem>(SelectedItemClass);
 				if (Item)
 				{
 					// Call ReceiveItem on the player to handle adding the item to their inventory
 					Player->ReciveItem(Item);
+
+					// Log the item that was given to the player
 					UE_LOG(LogTemp, Log, TEXT("Player received: %s"), *Item->GetItemName());
 				}
 			}
@@ -64,14 +76,15 @@ void AChest::GiveItemToPlayer(APlayerZDChar* Player)
 
 TSubclassOf<AItem> AChest::GetRandomItem()
 {
+	// Ensure there are items in the pool before selecting one
 	if (ItemPool.Num() > 0)
 	{
-		// Seleziona un indice casuale dall'array di oggetti
+		// Select a random index from the item pool array
 		int32 RandomIndex = UKismetMathLibrary::RandomIntegerInRange(0, ItemPool.Num() - 1);
 		return ItemPool[RandomIndex];
 	}
 
-	// Se non ci sono oggetti nella pool, restituisci nullptr
+	// Return nullptr if no items are available in the pool
 	return nullptr;
 }
 

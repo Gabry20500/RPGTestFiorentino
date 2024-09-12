@@ -16,10 +16,10 @@
 // Sets default values
 ALevelManager::ALevelManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-    PlayerX = 0;
-    PlayerY = 0;
+    // Enable ticking to allow real-time updates if necessary
+    PrimaryActorTick.bCanEverTick = true;
+    PlayerX = 0; // Initialize player X position
+    PlayerY = 0; // Initialize player Y position
 }
 
 // Called when the game starts or when spawned
@@ -27,8 +27,10 @@ void ALevelManager::BeginPlay()
 {
     Super::BeginPlay();
 
-    InitializeLevelGrid();   // Clear any previous level data
+    // Initialize the level grid and clear any previous level data
+    InitializeLevelGrid();
 
+    // Spawn rooms in the grid based on GridWidth and GridHeight
     for (int32 X = 0; X < GridWidth; ++X)
     {
         for (int32 Y = 0; Y < GridHeight; ++Y)
@@ -37,14 +39,16 @@ void ALevelManager::BeginPlay()
         }
     }
 
+    // Initialize door connections between rooms
     InitializeDoors();
 
-    // Marca la stanza iniziale come esplorata
+    // Mark the initial room as explored
     if (ARoom* InitialRoom = GetRoomAt(PlayerX, PlayerY))
     {
         InitialRoom->MarkAsExplored();
     }
 
+    // Initialize the minimap widget
     if (MinimapWidgetClass)
     {
         UWorld* World = GetWorld();
@@ -64,22 +68,20 @@ void ALevelManager::BeginPlay()
 
 void ALevelManager::InitializeLevelGrid()
 {
-    LevelGrid.Empty(); // Ensure LevelGrid is clean 
+    // Clear the level grid to ensure it starts empty
+    LevelGrid.Empty();
 }
 
 void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
 {
-    PlayerX = DeltaX;
-    PlayerY = DeltaY;
+    // Update player position with clamping to ensure it stays within bounds
+    PlayerX = FMath::Clamp(DeltaX, 0, GridWidth - 1);
+    PlayerY = FMath::Clamp(DeltaY, 0, GridHeight - 1);
 
-    // Log the new position for debugging
+    // Log the new player position for debugging purposes
     UE_LOG(LogTemp, Log, TEXT("Player Position: X=%d, Y=%d"), PlayerX, PlayerY);
 
-    // Ensure that PlayerX and PlayerY are within bounds
-    PlayerX = FMath::Clamp(PlayerX, 0, GridWidth - 1);
-    PlayerY = FMath::Clamp(PlayerY, 0, GridHeight - 1);
-
-    // Call any necessary logic after the player moves
+    // Handle logic for when the player moves, including marking the room as explored
     if (ARoom* CurrentRoom = GetRoomAt(PlayerX, PlayerY))
     {
         if (!CurrentRoom->IsExplored())
@@ -87,7 +89,7 @@ void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
             CurrentRoom->MarkAsExplored();
         }
 
-        // Update minimap
+        // Update the minimap with current room data
         if (MinimapWidget)
         {
             TMap<FIntPoint, ARoom*> RoomData = GetRoomDataForMinimap();
@@ -98,18 +100,19 @@ void ALevelManager::MovePlayer(int32 DeltaX, int32 DeltaY)
 
 void ALevelManager::InitializeDoors()
 {
+    // Iterate through all rooms and link doors to adjacent rooms
     for (auto& RoomEntry : LevelGrid)
     {
         ARoom* CurrentRoom = RoomEntry.Value;
         if (CurrentRoom)
         {
-            // Get adjacent rooms for this room
+            // Get adjacent rooms
             ARoom* NorthRoom = GetRoomAt(CurrentRoom->RoomX + 1, CurrentRoom->RoomY);
             ARoom* SouthRoom = GetRoomAt(CurrentRoom->RoomX - 1, CurrentRoom->RoomY);
             ARoom* EastRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY + 1);
             ARoom* WestRoom = GetRoomAt(CurrentRoom->RoomX, CurrentRoom->RoomY - 1);
 
-            // Now link the doors
+            // Link the doors
             CurrentRoom->LinkDoors(NorthRoom, SouthRoom, EastRoom, WestRoom);
         }
     }
@@ -117,10 +120,10 @@ void ALevelManager::InitializeDoors()
 
 void ALevelManager::SpawnRoom(int32 RoomX, int32 RoomY)
 {
- 
     int32 RandomValue = FMath::RandRange(0, 4);
     ERoomType RoomType;
 
+    // Determine room type based on random value
     switch (RandomValue)
     {
     case 0:
@@ -166,12 +169,11 @@ void ALevelManager::SpawnRoom(int32 RoomX, int32 RoomY)
 
 void ALevelManager::SpawnAllRooms()
 {
-    // Loop through all positions in the grid and spawn a room at each position
+    // Spawn rooms at every position in the grid
     for (int32 X = 0; X < GridWidth; ++X)
     {
         for (int32 Y = 0; Y < GridHeight; ++Y)
         {
-            ERoomType RoomType = ERoomType::Enemy; // Default room type
             SpawnRoom(X, Y);
         }
     }
@@ -181,6 +183,7 @@ TMap<FIntPoint, ARoom*> ALevelManager::GetRoomDataForMinimap() const
 {
     TMap<FIntPoint, ARoom*> RoomData;
 
+    // Add all rooms to the minimap data
     for (const auto& RoomEntry : LevelGrid)
     {
         const FIntPoint& RoomKey = RoomEntry.Key;
@@ -203,14 +206,12 @@ void ALevelManager::ToggleMinimap(bool bShow)
         {
             // Show the minimap and update it
             MinimapWidget->SetVisibility(ESlateVisibility::Visible);
-
-            // Update the minimap only when showing it
             TMap<FIntPoint, ARoom*> RoomData = GetRoomDataForMinimap();
             MinimapWidget->UpdateMinimap(RoomData);
         }
         else
         {
-            // Hide the minimap without removing it from the viewport
+            // Hide the minimap
             MinimapWidget->SetVisibility(ESlateVisibility::Hidden);
         }
     }

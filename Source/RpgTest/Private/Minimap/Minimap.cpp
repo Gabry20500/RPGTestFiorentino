@@ -7,20 +7,21 @@
 #include "RoomGeneration/Room.h"
 
 
-
+// Updates the minimap with the provided room data
 void UMinimap::UpdateMinimap(const TMap<FIntPoint, ARoom*>& RoomData)
 {
+    // Iterate through each room in the provided data
     for (const TPair<FIntPoint, ARoom*>& RoomPair : RoomData)
     {
         FIntPoint RoomCoordinates = RoomPair.Key;
         ARoom* Room = RoomPair.Value;
 
-        // Trova l'immagine della stanza basata sulle coordinate
+        // Find the image widget corresponding to the room's coordinates
         if (UImage** RoomImagePtr = RoomImages.Find(RoomCoordinates))
         {
             UImage* RoomImage = *RoomImagePtr;
 
-            // Se la stanza è esplorata, usa l'icona corrispondente
+            // Set the appropriate icon based on whether the room is explored
             if (Room->IsExplored())
             {
                 switch (Room->RoomType)
@@ -52,43 +53,40 @@ void UMinimap::UpdateMinimap(const TMap<FIntPoint, ARoom*>& RoomData)
             }
             else
             {
-                // Se la stanza non è esplorata, usa l'icona generica
+                // Use the generic icon for unexplored rooms
                 RoomImage->SetBrushFromTexture(GenericRoomIcon);
             }
         }
     }
 }
 
+// Initializes the minimap grid with the specified dimensions
 void UMinimap::InitializeMinimap(int32 GridWidth, int32 GridHeight)
 {
     if (MinimapGrid)
     {
-        // Clear any existing widgets in the grid
+        // Clear any existing widgets from the grid panel
         MinimapGrid->ClearChildren();
         RoomImages.Empty();
 
-        // Create the grid dynamically
+        // Create the grid layout dynamically based on the specified dimensions
         for (int32 X = 0; X < GridWidth; ++X)
         {
             for (int32 Y = 0; Y < GridHeight; ++Y)
             {
-                // Create a new image for each room
+                // Create a new image widget for each room in the grid
                 UImage* RoomImage = NewObject<UImage>(this);
 
-                // Set the initial icon to be the unexplored room icon
+                // Set the initial icon to the generic room icon
                 RoomImage->SetBrushFromTexture(GenericRoomIcon);
                 RoomImage->SetVisibility(ESlateVisibility::Visible);
 
-                // Add the image to the grid at the corresponding location
+                // Add the image widget to the grid panel at the specified location
                 MinimapGrid->AddChildToUniformGrid(RoomImage, Y, X);
 
-                // Save the reference in the map for later updates
+                // Store a reference to the image widget for future updates
                 RoomImages.Add(FIntPoint(X, Y), RoomImage);
             }
         }
     }
-}
-
-void UMinimap::InitializeRoomIcons()
-{
 }

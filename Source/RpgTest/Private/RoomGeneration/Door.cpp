@@ -8,33 +8,25 @@
 // Sets default values
 ADoor::ADoor()
 {
-    // Disable ticking if not necessary
+    // Disable ticking as it's not required for this actor
     PrimaryActorTick.bCanEverTick = false;
-    LinkedRoom = nullptr; // Initialize the linked room to nullptr
-}
 
-// Called when the game starts or when spawned
-void ADoor::BeginPlay()
-{
-    Super::BeginPlay();
+    // Initialize the linked room to nullptr
+    LinkedRoom = nullptr;
 }
 
 // Link the door to another room
 void ADoor::LinkToRoom(ARoom* InLinkedRoom)
 {
+    // Check if the provided room is valid before linking
     if (InLinkedRoom != nullptr)
     {
         LinkedRoom = InLinkedRoom;
     }
 }
 
+// Get the room that this door is linked to
 ARoom* ADoor::GetLinkedRoom()
 {
     return LinkedRoom;
-}
-
-// Called every frame
-void ADoor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
 }

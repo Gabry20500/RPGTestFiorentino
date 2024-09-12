@@ -20,10 +20,13 @@
 #include <Kismet/GameplayStatics.h>
 
 
+// Constructor: Initializes default values for the player's attributes
 APlayerZDChar::APlayerZDChar()
 {
-	PrimaryActorTick.bCanEverTick = true;
+    // Allow the actor to tick every frame
+    PrimaryActorTick.bCanEverTick = true;
 
+    // Set default values for attributes
     Damage = 35;
     Health = 100;
     Shield = 0;
@@ -40,51 +43,61 @@ APlayerZDChar::APlayerZDChar()
     ShieldPotionCount = 0;
 }
 
+// Increases the player's XP and handles level-up logic
 void APlayerZDChar::GainXP(int32 Amount)
 {
+    // Increment XP and log the amount gained
     CurrentXP += Amount;
-
     UE_LOG(LogTemp, Log, TEXT("XP Gained: %d, Current XP: %d"), Amount, CurrentXP);
 
+    // Check if the player has reached the XP threshold for leveling up
     if (CurrentXP >= XPToNextLevel)
     {
+        // Handle level-up
         CurrentXP -= XPToNextLevel;
         PlayerLevel++;
-        XPToNextLevel += 50; 
+        XPToNextLevel += 50; // Increase XP required for the next level
 
         UE_LOG(LogTemp, Warning, TEXT("Level Up! New Level: %d | Next Level XP: %d | Current XP : %d"), PlayerLevel, XPToNextLevel, CurrentXP);
 
+        // Enhance player's health and damage upon leveling up
         Health += 20;
-        Damage += 5;  
+        Damage += 5;
     }
 }
 
+// Returns the current health of the player
 int APlayerZDChar::GetPlyHealth() const
 {
     return Health;
 }
 
+// Returns the current shield value of the player
 int APlayerZDChar::GetPlyShield() const
 {
     return Shield;
 }
 
+// Increases the player's shield value by the specified amount
 void APlayerZDChar::IncreaseShield(float Amount)
 {
     Shield += Amount;
 }
 
+// Increases the player's attack damage by the specified amount
 void APlayerZDChar::IncreaseAttack(float Amount)
 {
     Damage += Amount;
 }
 
+// Applies a new state to the player and sets up timers for state effects
 void APlayerZDChar::ApplyState(EPlayerState NewState, float StateDuration)
 {
     CurrentState = NewState;
 
-    UpdatePlayerColor();
+    UpdatePlayerColor(); // Update player color based on the new state
 
+    // Set up timers for state effects based on the new state
     switch (CurrentState)
     {
     case EPlayerState::Poisoned:
@@ -100,6 +113,7 @@ void APlayerZDChar::ApplyState(EPlayerState NewState, float StateDuration)
     }
 }
 
+// Toggle the minimap visibility
 void APlayerZDChar::ManageMinimap()
 {
     if (bIsMinimapVisible == false)
@@ -120,6 +134,7 @@ void APlayerZDChar::ManageMinimap()
     }
 }
 
+// Hide the minimap
 void APlayerZDChar::HideMinimap()
 {
     if (ALevelManager* LevelManager = GetLevelManager())
@@ -128,27 +143,25 @@ void APlayerZDChar::HideMinimap()
     }
 }
 
+// Initializes components and default values when the game starts
 void APlayerZDChar::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	AnimationComponent = Cast<UPaperZDAnimationComponent>(GetComponentByClass(UPaperZDAnimationComponent::StaticClass()));
+    // Initialize animation components and flipbook
+    AnimationComponent = Cast<UPaperZDAnimationComponent>(GetComponentByClass(UPaperZDAnimationComponent::StaticClass()));
     PlayerFlipbook = FindComponentByClass<UPaperFlipbookComponent>();
 
-	PlyRotation = FPlayerDirection::Down;
-
-    
+    // Set default player rotation
+    PlyRotation = FPlayerDirection::Down;
 }
 
-void APlayerZDChar::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
+// Bind input actions and axes for player control
 void APlayerZDChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    // Bind movement and action inputs
 	InputComponent->BindAxis("MoveRight", this, &APlayerZDChar::MoveRight);
 	InputComponent->BindAxis("MoveForeward", this, &APlayerZDChar::MoveForeward);
 	InputComponent->BindAction("Attack", IE_Pressed, this, &APlayerZDChar::Attack);
@@ -161,6 +174,7 @@ void APlayerZDChar::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+// Return the player's rotation based on the direction
 FRotator APlayerZDChar::GetRotation()
 {
     switch (PlyRotation)
@@ -183,6 +197,7 @@ FRotator APlayerZDChar::GetRotation()
     }
 }
 
+// Move the player forward or backward based on input
 void APlayerZDChar::MoveForeward(float AxisValue)
 {
     if (AxisValue != 0)
@@ -200,6 +215,7 @@ void APlayerZDChar::MoveForeward(float AxisValue)
     }
 }
 
+// Move the player right or left based on input
 void APlayerZDChar::MoveRight(float AxisValue)
 {
     if (AxisValue != 0)
@@ -218,6 +234,7 @@ void APlayerZDChar::MoveRight(float AxisValue)
     }
 }
 
+// Performs an attack and applies damage to enemies within range
 void APlayerZDChar::Attack()
 {
     APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -231,15 +248,15 @@ void APlayerZDChar::Attack()
         FVector End = Start + (GetRotation().Vector() * 300.0f);
 
         FHitResult HitResult;
-
         FCollisionQueryParams CollisionParams;
         CollisionParams.AddIgnoredActor(this);
 
+        // Perform a line trace to detect enemies
         bool bHit = GetWorld()->LineTraceSingleByChannel(
             HitResult,
             Start,
             End,
-            ECC_GameTraceChannel1,//Custom enemy trace channel
+            ECC_GameTraceChannel1, // Custom enemy trace channel
             CollisionParams
         );
 
@@ -248,40 +265,37 @@ void APlayerZDChar::Attack()
             if (AEnemy* Enemy = Cast<AEnemy>(HitResult.GetActor()))
             {
                 Enemy->ApplyDamage(Damage);
-
                 UE_LOG(LogTemp, Warning, TEXT("Enemy: %s | Health: %d"), *Enemy->GetName(), Enemy->GetHealth());
-            }        
+            }
         }
-
-        // Debug line to visualize the trace
-        DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
     }
 }
 
+// Moves the player to a new location and updates the level manager with the new coordinates
 void APlayerZDChar::MovePlayer(FVector Direction)
 {
     FVector NewLocation = GetActorLocation() + Direction;
     SetActorLocation(NewLocation);
 
-    // Trova il LevelManager
+    // Update room coordinates in the LevelManager
     ALevelManager* LevelManager = GetLevelManager();
     if (LevelManager)
     {
-        // Convert NewLocation to grid coordinates (assuming each grid cell is 1500 units in size)
         int32 NewX = FMath::RoundToInt(NewLocation.X / 1500.0f);
         int32 NewY = FMath::RoundToInt(NewLocation.Y / 1500.0f);
-
         LevelManager->MovePlayer(NewX, NewY);
     }
 
     UE_LOG(LogTemp, Warning, TEXT("Player moved to: %s"), *NewLocation.ToString());
 }
 
+// Retrieve the LevelManager instance from the world
 ALevelManager* APlayerZDChar::GetLevelManager() const
 {
     return Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass()));
 }
 
+// Update the player's color based on the current state
 void APlayerZDChar::UpdatePlayerColor()
 {
     switch (CurrentState)
@@ -299,157 +313,166 @@ void APlayerZDChar::UpdatePlayerColor()
     }
 }
 
+// Applies poison damage to the player every second and decreases the poison duration.
+// Removes the poisoned state when the duration expires.
 void APlayerZDChar::PoisonTick()
 {
-    ApplyDamage(5);  // Danno da veleno ogni secondo
-    PoisonDuration -= 1.0f;
+    ApplyDamage(5);  // Apply poison damage of 5 units per second
+    PoisonDuration -= 1.0f;  // Decrease the poison duration by 1 second
 
     if (PoisonDuration <= 0.0f)
     {
-        // Rimuove lo stato di avvelenamento
+        // Remove the poisoned state when duration reaches zero or less
         ClearState();
     }
 }
 
+// Applies burning damage to the player every second and decreases the burning duration.
+// Removes the burning state when the duration expires.
 void APlayerZDChar::BurnTick()
 {
-    ApplyDamage(10);  // Danno da bruciore ogni secondo
-    BurningDuration -= 1.0f;
+    ApplyDamage(10);  // Apply burning damage of 10 units per second
+    BurningDuration -= 1.0f;  // Decrease the burning duration by 1 second
 
     if (BurningDuration <= 0.0f)
     {
-        // Rimuove lo stato di bruciore
+        // Remove the burning state when duration reaches zero or less
         ClearState();
     }
 }
 
+// Clears the player's state, stopping any active timers and resetting the state to normal.
+// Updates the player's color to reflect the normal state.
 void APlayerZDChar::ClearState()
 {
-    GetWorldTimerManager().ClearTimer(StateTimerHandle);
-    CurrentState = EPlayerState::Normal;
-    UpdatePlayerColor();
+    GetWorldTimerManager().ClearTimer(StateTimerHandle);  // Clear any active state timer
+    CurrentState = EPlayerState::Normal;  // Set the player's state to normal
+    UpdatePlayerColor();  // Update the player's color to reflect the normal state
 }
 
-
-
+// Uses a shield potion if available, increasing the player's shield and decrementing the potion count.
+// Logs the usage and current shield status.
 void APlayerZDChar::UseShieldPotion()
 {
     if (ShieldPotionCount > 0)
     {
-        IncreaseShield(50.0f);
-        ShieldPotionCount--;
-        UE_LOG(LogTemp, Log, TEXT("Usata pozione di scudo. Scudo attuale: %d | Pozioni rimaste: %d"), Shield, ShieldPotionCount);
+        IncreaseShield(50.0f);  // Increase the shield value by 50 units
+        ShieldPotionCount--;  // Decrease the potion count
+        UE_LOG(LogTemp, Log, TEXT("Shield potion used. Current shield: %d | Potions remaining: %d"), Shield, ShieldPotionCount);
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Non hai pozioni di scudo!"));
+        UE_LOG(LogTemp, Warning, TEXT("No shield potions available!"));  // Log a warning if no potions are left
     }
 }
 
+// Uses an attack potion if available, increasing the player's attack damage and decrementing the potion count.
+// Logs the usage and current attack damage.
 void APlayerZDChar::UseAttackPotion()
 {
     if (AttackPotionCount > 0)
     {
-        IncreaseAttack(10);
-        AttackPotionCount--;
-        UE_LOG(LogTemp, Log, TEXT("Pozione di attacco usata! Attacco attuale: %d | Pozioni d'attacco rimaste: %d"), Damage, AttackPotionCount);
+        IncreaseAttack(10);  // Increase the attack damage by 10 units
+        AttackPotionCount--;  // Decrease the potion count
+        UE_LOG(LogTemp, Log, TEXT("Attack potion used! Current attack: %d | Potions remaining: %d"), Damage, AttackPotionCount);
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Non ci sono pozioni di attacco!"));
+        UE_LOG(LogTemp, Warning, TEXT("No attack potions available!"));  // Log a warning if no potions are left
     }
 }
 
+// Applies damage to the player, first absorbing it with the shield if available.
+// Decreases health if the damage exceeds the shield's capacity and logs the remaining health.
 void APlayerZDChar::ApplyDamage(int DamageAmount)
 {
-    UE_LOG(LogTemp, Log, TEXT("Applying Damage: %d"), DamageAmount);
+    UE_LOG(LogTemp, Log, TEXT("Applying Damage: %d"), DamageAmount);  // Log the damage being applied
 
-    // Se il giocatore ha scudo, intacca prima quello
+    // If the player has a shield, absorb the damage with the shield first
     if (Shield > 0)
     {
         if (DamageAmount <= Shield)
         {
-            // Il danno è inferiore o uguale allo scudo, quindi riduce solo lo scudo
+            // Damage is less than or equal to the shield value, so only reduce the shield
             Shield -= DamageAmount;
             UE_LOG(LogTemp, Log, TEXT("Damage absorbed by shield. Remaining shield: %d"), Shield);
         }
         else
         {
-            // Il danno eccede lo scudo, quindi intacca anche la salute
+            // Damage exceeds the shield value, so absorb remaining damage with health
             int32 RemainingDamage = DamageAmount - Shield;
-            Shield = 0; // Scudo esaurito
+            Shield = 0;  // Deplete the shield
             UE_LOG(LogTemp, Log, TEXT("Shield depleted. Remaining damage to health: %d"), RemainingDamage);
 
-            // Riduci la salute con il danno rimanente
+            // Reduce health by the remaining damage
             Health -= RemainingDamage;
         }
     }
     else
     {
-        // Se non c'è scudo, applica tutto il danno alla salute
+        // If no shield is present, apply all damage to health
         Health -= DamageAmount;
     }
 
-    // Log del valore della salute residua
-    UE_LOG(LogTemp, Log, TEXT("Remaining health: %d"), Health);
+    UE_LOG(LogTemp, Log, TEXT("Remaining health: %d"), Health);  // Log the remaining health
 
-    // Se la salute va a 0 o meno, considera il giocatore morto
+    // If health drops to zero or below, consider the player dead
     if (Health <= 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Player is dead!"));
-        // Qui puoi implementare la logica per la morte del personaggio, come ad esempio giocare un'animazione, cambiare stato, etc.
-
-    };
+        UE_LOG(LogTemp, Warning, TEXT("Player is dead!"));  // Log a warning about the player's death
+        // Implement logic for player death, such as playing a death animation or changing state
+    }
 }
 
+// Handles interactions with various types of actors (HealthFountain, Chest, Mimic, Door) based on overlap events.
+// Updates the player's ability to interact and logs the interaction status.
 void APlayerZDChar::Interact()
 {
     if (bCanInteract && InteractableActor)
     {
         if (AHealthFountain* Fountain = Cast<AHealthFountain>(InteractableActor))
         {
-            Fountain->HealPlayer(this);
-            Fountain->ChangeFlipbook();
+            Fountain->HealPlayer(this);  // Heal the player using the health fountain
+            Fountain->ChangeFlipbook();  // Change the visual representation of the fountain
         }
         else if (AChest* Chest = Cast<AChest>(InteractableActor))
         {
-            Chest->ChangeFlipbook();
-            Chest->GiveItemToPlayer(this);
+            Chest->ChangeFlipbook();  // Change the visual representation of the chest
+            Chest->GiveItemToPlayer(this);  // Give the item from the chest to the player
         }
         else if (AMimic* Mimic = Cast<AMimic>(InteractableActor))
         {
-            Mimic->TransformToEnemy();
+            Mimic->TransformToEnemy();  // Transform the mimic into an enemy
         }
         else if (ADoor* Door = Cast<ADoor>(InteractableActor))
         {
-            ARoom* CurrentRoom = GetCurrentRoom(); // Funzione che restituisce la stanza attuale del giocatore
-            ARoom* NextRoom = Door->GetLinkedRoom(); // Stanza collegata dalla porta
+            ARoom* CurrentRoom = GetCurrentRoom();  // Retrieve the player's current room
+            ARoom* NextRoom = Door->GetLinkedRoom();  // Retrieve the room linked by the door
 
             if (CurrentRoom && NextRoom)
             {
-                // Determina la direzione in base alla porta
+                // Determine the direction of movement based on the door
                 FVector Direction;
                 if (Door == CurrentRoom->NorthDoor)
                 {
-                    Direction = FVector(300.0f, 0, 0); // Spostamento verso nord
+                    Direction = FVector(300.0f, 0, 0);  // Move north
                 }
                 else if (Door == CurrentRoom->SouthDoor)
                 {
-                    Direction = FVector(-300.0f, 0, 0); // Spostamento verso sud
+                    Direction = FVector(-300.0f, 0, 0);  // Move south
                 }
                 else if (Door == CurrentRoom->EastDoor)
                 {
-                    Direction = FVector(0, 300.0f, 0); // Spostamento verso est
+                    Direction = FVector(0, 300.0f, 0);  // Move east
                 }
                 else if (Door == CurrentRoom->WestDoor)
                 {
-                    Direction = FVector(0, -300.0f, 0); // Spostamento verso ovest
+                    Direction = FVector(0, -300.0f, 0);  // Move west
                 }
 
-                // Sposta il giocatore
-                MovePlayer(Direction);
+                MovePlayer(Direction);  // Move the player in the determined direction
 
-                // Trova il LevelManager e aggiorna la stanza
+                // Find the LevelManager and update the current room
                 TArray<AActor*> FoundActors;
                 UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("LM"), FoundActors);
 
@@ -458,11 +481,9 @@ void APlayerZDChar::Interact()
                     ALevelManager* LevelManager = Cast<ALevelManager>(Actor);
                     if (LevelManager)
                     {
-                        //// Disattiva la stanza corrente
-                        //LevelManager->DeactivateAllRooms();
-
-                        //// Attiva la nuova stanza
-                        //LevelManager->ActivateRoomAt(NextRoom->GetRoomX(), NextRoom->GetRoomY());
+                        // Deactivate the current room and activate the next room
+                        // LevelManager->DeactivateAllRooms();
+                        // LevelManager->ActivateRoomAt(NextRoom->GetRoomX(), NextRoom->GetRoomY());
                     }
                 }
             }
@@ -470,65 +491,76 @@ void APlayerZDChar::Interact()
     }
 }
 
+// Called when another actor begins overlapping with this actor.
+// Sets the interaction flag and logs the interactable actor.
 void APlayerZDChar::NotifyActorBeginOverlap(AActor* OtherActor)
 {
     Super::NotifyActorBeginOverlap(OtherActor);
 
     if (OtherActor && (OtherActor->IsA(AHealthFountain::StaticClass()) ||
         OtherActor->IsA(AChest::StaticClass()) ||
-        OtherActor->IsA(AMimic::StaticClass())) || 
-        OtherActor->IsA(ADoor::StaticClass()))
+        OtherActor->IsA(AMimic::StaticClass()) ||
+        OtherActor->IsA(ADoor::StaticClass())))
     {
-        bCanInteract = true;
-        InteractableActor = OtherActor;
-        UE_LOG(LogTemp, Warning, TEXT("Interazione possibile con: %s"), *OtherActor->GetName());
+        bCanInteract = true;  // Allow interaction with the actor
+        InteractableActor = OtherActor;  // Set the actor as interactable
+        UE_LOG(LogTemp, Warning, TEXT("Interaction possible with: %s"), *OtherActor->GetName());
     }
 }
 
+// Called when another actor stops overlapping with this actor.
+// Disables interaction and clears the interactable actor.
 void APlayerZDChar::NotifyActorEndOverlap(AActor* OtherActor)
 {
     Super::NotifyActorEndOverlap(OtherActor);
 
     if (OtherActor && OtherActor == InteractableActor)
     {
-        bCanInteract = false;
-        InteractableActor = nullptr;
-        UE_LOG(LogTemp, Log, TEXT("Interazione terminata con: %s"), *OtherActor->GetName());
+        bCanInteract = false;  // Disable interaction with the actor
+        InteractableActor = nullptr;  // Clear the reference to the interactable actor
+        UE_LOG(LogTemp, Log, TEXT("Interaction ended with: %s"), *OtherActor->GetName());
     }
 }
 
+// Handles the reception of an item, updates potion counts if the item is a potion, and destroys the item after it's received.
+// Logs the type of the received item and updates the player's inventory accordingly.
 void APlayerZDChar::ReciveItem(AItem* Item)
 {
     if (Item)
     {
         UE_LOG(LogTemp, Log, TEXT("Received Item: %s"), *Item->GetClass()->GetName());
 
+        // Check if the item is an attack potion
         if (Item->IsA(AAttackPotion::StaticClass()))
         {
-            AttackPotionCount++;
-            UE_LOG(LogTemp, Log, TEXT("Received a Attack Potion. Total: %d"), AttackPotionCount);
+            AttackPotionCount++;  // Increment the attack potion count
+            UE_LOG(LogTemp, Log, TEXT("Received an Attack Potion. Total: %d"), AttackPotionCount);
         }
+        // Check if the item is a shield potion
         else if (Item->IsA(AShieldPotion::StaticClass()))
         {
-            ShieldPotionCount++;
+            ShieldPotionCount++;  // Increment the shield potion count
             UE_LOG(LogTemp, Log, TEXT("Received a Shield Potion. Total: %d"), ShieldPotionCount);
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("Received an item of unknown type."));
+            UE_LOG(LogTemp, Warning, TEXT("Received an item of unknown type."));  // Log a warning for unknown item types
         }
 
-        // Distruggi l'oggetto dopo che è stato ricevuto
+        // Destroy the item after it has been received and processed
         Item->Destroy();
     }
 }
 
+// Retrieves the player's current room based on their location in the game world.
+// Calculates the room coordinates from the player's position and retrieves the corresponding room from the LevelManager.
+// Returns nullptr if no room is found.
 ARoom* APlayerZDChar::GetCurrentRoom() const
 {
-    // Retrieve the player's current location
+    // Retrieve the player's current location in the game world
     FVector PlayerLocation = GetActorLocation();
 
-    // Calculate room coordinates from the player's location
+    // Compute the room coordinates based on the player's location
     int32 PlayerX = FMath::RoundToInt(PlayerLocation.X / 1500.0f);
     int32 PlayerY = FMath::RoundToInt(PlayerLocation.Y / 1500.0f);
 
@@ -536,16 +568,17 @@ ARoom* APlayerZDChar::GetCurrentRoom() const
     TArray<AActor*> FoundActors;
     UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("LM"), FoundActors);
 
+    // Iterate through the found actors to locate the LevelManager
     for (AActor* Actor : FoundActors)
     {
         ALevelManager* LevelManager = Cast<ALevelManager>(Actor);
         if (LevelManager)
         {
-            // Return the room at the computed coordinates
+            // Return the room located at the computed coordinates
             return LevelManager->GetRoomAt(PlayerX, PlayerY);
         }
     }
 
-    // Return nullptr if no room is found
+    // Return nullptr if the LevelManager or room is not found
     return nullptr;
 }

@@ -3,24 +3,27 @@
 
 #include "Item/Item.h"
 
-// Sets default values
+// Sets default values for this actor's properties
 AItem::AItem()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Enable ticking for this actor, allowing it to call Tick() every frame.
+    // This can be disabled if frame-by-frame updates are not needed for performance optimization.
+    PrimaryActorTick.bCanEverTick = true;
 
-	ItemName = TEXT("Default Item");
+    // Initialize the default item name
+    ItemName = TEXT("Default Item");
 }
 
-// Called when the game starts or when spawned
+// Called when the game starts or when the actor is spawned
 void AItem::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+    // Additional initialization logic can be added here if needed
 }
 
+// Retrieves the name of the item
 FString AItem::GetItemName() const
 {
-	return ItemName;
+    return ItemName;
 }
 

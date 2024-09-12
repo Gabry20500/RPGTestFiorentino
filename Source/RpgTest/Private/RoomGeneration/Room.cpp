@@ -62,6 +62,7 @@ void ARoom::BeginPlay()
 
 void ARoom::SetRoomContent(int32 RoomID)
 {
+    // Spawn room content only if the room is not yet completed
     if (!bIsCompleted)
     {
         SpawnRoomContent();
@@ -70,6 +71,7 @@ void ARoom::SetRoomContent(int32 RoomID)
 
 void ARoom::MarkAsCompleted()
 {
+    // Mark the room as completed
     bIsCompleted = true;
 }
 
@@ -110,6 +112,7 @@ void ARoom::LinkDoors(ARoom* NorthRoom, ARoom* SouthRoom, ARoom* EastRoom, ARoom
 
 void ARoom::ActivateRoom()
 {
+    // Set the room and its doors to be visible and interactable
     SetActorHiddenInGame(false);
     SetActorEnableCollision(true);
 
@@ -137,6 +140,7 @@ void ARoom::ActivateRoom()
 
 void ARoom::DeactivateRoom()
 {
+    // Hide the room and its doors and make them non-collidable
     SetActorHiddenInGame(true);
     SetActorEnableCollision(false);
 
@@ -164,6 +168,7 @@ void ARoom::DeactivateRoom()
 
 void ARoom::MarkAsExplored()
 {
+    // Mark the room as explored and update the minimap
     bIsExplored = true;
 
     ALevelManager* LMInstance = Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALevelManager::StaticClass()));
@@ -178,6 +183,7 @@ void ARoom::MarkAsExplored()
 
 void ARoom::SpawnRoomContent()
 {
+    // Spawn content based on the room type
     switch (RoomType)
     {
     case ERoomType::HealingFountain:
@@ -195,7 +201,7 @@ void ARoom::SpawnRoomContent()
     case ERoomType::Enemy:
         if (EnemyBlueprints.Num() > 0)
         {
-            // Pick a random enemy from the array
+            // Select a random enemy from the available blueprints
             int32 RandomIndex = FMath::RandRange(0, EnemyBlueprints.Num() - 1);
             TSubclassOf<AEnemy> SelectedEnemyBlueprint = EnemyBlueprints[RandomIndex];
 

@@ -410,8 +410,14 @@ void APlayerZDChar::ApplyDamage(int DamageAmount)
     }
     else
     {
-        // If no shield is present, apply all damage to health
-        Health -= DamageAmount;
+        if(Health > 0)
+        {
+            // If no shield is present, apply all damage to health
+            Health -= DamageAmount;
+        }else
+        {
+            UGameplayStatics::OpenLevel(GetWorld(), TEXT("MainMenu"));
+        }
     }
 
     UE_LOG(LogTemp, Log, TEXT("Remaining health: %d"), Health);  // Log the remaining health
